@@ -1,4 +1,5 @@
 import os
+import platform
 from ConfigParser import SafeConfigParser
 
 _config = None
@@ -49,4 +50,20 @@ class Config(SafeConfigParser):
         if self.has_option("Bundle", "path"):
             return self.get("Bundle", "path")
         return None        
+        
+def platform():
+    p = platform.platform()
+    if p.startswith("Windows"):
+         return "win"
+    elif p.startswith("Darwin"):
+         return "mac"
+    elif p.startswith("Linux"):
+         return "linux"
+         
+def exe_arch():
+    a = platform.architecture()
+    if a.startswith("32"):
+        return "x86"
+    elif a.startswith("64"):
+        return "x64 "
         
