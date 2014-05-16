@@ -51,7 +51,7 @@ class Config(SafeConfigParser):
             return self.get("Bundle", "path")
         return None        
         
-def platform():
+def os_name():
     p = platform.platform()
     if p.startswith("Windows"):
          return "win"
