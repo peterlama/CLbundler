@@ -1,1 +1,1 @@
-C:\Python27\python.exe clbundler.py %*
+C:\Python27\python.exe -m clbundler %*
