@@ -9,20 +9,6 @@ _formula_kit_cache = {}
 _default_search_path = [os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Formula"))]
 _default_search_path.append(os.path.join(_default_search_path[0], config.os_name()))
 
-def _find(name, search_path=[]):
-    formula_path = ""
-    for path in search_path + _default_search_path:
-        if os.path.exists(os.path.join(path, name + ".py")):
-            formula_path = os.path.join(path, name + ".py")
-    return formula_path
-
-def _find_kit(name, search_path=[]):
-    kit_path = ""
-    for path in search_path + _default_search_path:
-        if os.path.isdir(os.path.join(path, name)):
-            kit_path = os.path.join(path, name)
-    return kit_path
-
 def _validate(formula):
     required_attrs = ["version", "source", "supported", "install"]
     for a in required_attrs:
@@ -40,7 +26,7 @@ def _validate_kit(formula_kit):
     if not hasattr(formula_kit, "depends_on"):
         raise AttributeError
         
-    setattr(formula, "name", formula.__name__)  
+    setattr(formula_kit, "name", formula_kit.__name__)  
    
 def get(name, search_path=[]):
     file_path = ""
@@ -54,11 +40,12 @@ def get(name, search_path=[]):
     if _formula_cache.has_key(name):
         return _formula_cache[name]
     else:
-        if not file_path:
-            file_path = _find(name, search_path)
-        
-        logging.getLogger().debug(file_path)
-        formula = imp.load_source(name, file_path)
+        if file_path:
+            module_info = imp.find_module(name, [os.path.dirname(file_path)])
+        else:
+            module_info = imp.find_module(name, search_path + _default_search_path)
+            
+        formula = imp.load_module(name, *module_info)
         _validate(formula)
         
         _formula_cache[name] = formula
@@ -77,10 +64,12 @@ def get_kit(name, search_path=[]):
     if _formula_kit_cache.has_key(name):
         return _formula_kit_cache[name]
     else:
-        if not path:
-            path = _find_kit(name, search_path)
-        logging.getLogger().debug(path)
-        formula = imp.load_source(name, path)
+        if path:
+            module_info = imp.find_module(name, [os.path.dirname(path)])
+        else:
+            module_info = imp.find_module(name, search_path + _default_search_path)
+        
+        formula = imp.load_module(name, *module_info)
         _validate_kit(formula)
         
         _formula_kit_cache[name] = formula
