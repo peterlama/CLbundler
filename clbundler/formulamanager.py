@@ -16,6 +16,7 @@ def _validate(formula):
             raise AttributeError
             
     setattr(formula, "name", formula.__name__)  
+    setattr(formula, "dir", os.path.dirname(os.path.abspath(formula.__file__)))
     
     if not hasattr(formula, "depends_on"):
         setattr(formula, "depends_on", [])

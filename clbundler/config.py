@@ -27,12 +27,21 @@ class Config(SafeConfigParser):
         #options that need to always be available    
         self.defaults()["root"] = Config._default_data_dir
         self.defaults()["workspace"] = "%(root)s" + os.path.sep + "workspace"
+        self.defaults()["source"] = "%(root)s" + os.path.sep + "source"
         
         if not self.has_section("Paths"):
             self.add_section("Paths")
         if not self.has_section("Bundle"):
             self.add_section("Bundle")
-    
+         
+        #create the directories
+        if not os.path.exists(self.get("Paths", "root")):
+            os.mkdir(self.get("Paths", "root"))
+        if not os.path.exists(self.get("Paths", "workspace")):
+            os.mkdir(self.get("Paths", "workspace"))
+        if not os.path.exists(self.get("Paths", "source")):
+            os.mkdir(self.get("Paths", "source"))
+            
     def write(self, path=_default_config_path):
         if not os.path.exists(os.path.dirname(path)):
             os.mkdir(os.path.dirname(path))
@@ -45,6 +54,9 @@ class Config(SafeConfigParser):
         
     def workspace_dir(self):
         return self.get("Paths", "workspace")
+        
+    def src_dir(self):
+        return self.get("Paths", "source")
         
     def current_bundle(self):
         if self.has_option("Bundle", "path"):
