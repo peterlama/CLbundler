@@ -73,7 +73,7 @@ class LibBundle:
         cursor = connection.cursor()
 
         row = cursor.execute("SELECT * FROM installed WHERE name = ?",
-                             (name,)).fetchone()
+                             (package_name,)).fetchone()
         connection.commit()
         connection.close()
 
