@@ -23,13 +23,8 @@ def cmd_new(path, toolchain, arch):
 def cmd_install(name, kit=False):
     bundle = LibBundle()
     bundle.load(config.global_config().current_bundle())
-    
-    if kit:
-        formula = formulamanager.get_kit(name)
-    else:
-        formula = formulamanager.get(name)
 
-    builder = FormulaBuilder(bundle, formula)
+    builder = FormulaBuilder(bundle, name, kit)
     builder.install()
 
 def cmd_uninstall(formula_name):

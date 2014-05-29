@@ -17,10 +17,15 @@ class BuildContext:
         self.env = env.env
         
 class FormulaBuilder:
-    def __init__(self, bundle, formula):
+    def __init__(self, bundle, formula_name, kit=False):
         self._bundle = bundle
         self._context = BuildContext(bundle.path, bundle.toolchain, bundle.arch)
         self._dep_graph = DepGraph()
+        
+        if kit:
+            formula = formulamanager.get_kit(formula_name, self._context)
+        else:
+            formula = formulamanager.get(formula_name, self._context)
         self._create_dep_graph(formula)
         
     def install(self):
@@ -29,7 +34,7 @@ class FormulaBuilder:
         self._dep_graph.traverse(self._install_visitor)
         
     def _install_visitor(self, fname):
-        formula = formulamanager.get(fname)
+        formula = formulamanager.get(fname, self._context)
         if not self._bundle.is_installed(formula.name):
             build_dir_name = "build_{0}_{1}".format(self._bundle.toolchain, self._bundle.arch)
             build_dir = os.path.join(config.global_config().workspace_dir(), build_dir_name)
@@ -57,23 +62,25 @@ class FormulaBuilder:
             if patches:            
                 system.patch(patches, source_dir)
             
-            package = formula.install(self._context)
+            package = formula.build()
             self._bundle.install(package)
             
             os.chdir(old_cwd)
         
     def _create_dep_graph(self, formula):
         def _add_node(graph, formula):
-            deps = formulamanager.dep_list_str(formula)
-            for n in deps:
-                _add_node(graph, formulamanager.get(n, [os.path.dirname(formula.__file__)]))
+            for dep_name, options in formula.depends_on.iteritems():
+                logging.getLogger().debug(formula.dir)
+                _add_node(graph, formulamanager.get(dep_name, self._context, options, 
+                                                    [formula.dir]))
                 
-            self._dep_graph.add(formula.name, deps)
+            self._dep_graph.add(formula.name, formula.depends_on.keys())
         
-        if not formulamanager.is_kit(formula):
-            self._dep_graph.add(formula.name, formulamanager.dep_list_str(formula))        
+        if not formula.is_kit:
+            self._dep_graph.add(formula.name, formula.depends_on.keys())        
         
-        for n in formulamanager.dep_list_str(formula):
-            #logging.getLogger().debug(os.path.dirname(formula.__file__))
-            _add_node(self._dep_graph, formulamanager.get(n, [os.path.dirname(formula.__file__)]))
+        for dep_name, options in formula.depends_on.iteritems():
+            #logging.getLogger().debug(formula.dir)
+            _add_node(self._dep_graph, formulamanager.get(dep_name, self._context, options, 
+                                                          [formula.dir]))
         
