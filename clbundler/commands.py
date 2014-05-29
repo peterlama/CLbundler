@@ -20,11 +20,11 @@ def cmd_new(path, toolchain, arch):
     
     cmd_set(fpath)
     
-def cmd_install(name, kit=False):
+def cmd_install(name):
     bundle = LibBundle()
     bundle.load(config.global_config().current_bundle())
 
-    builder = FormulaBuilder(bundle, name, kit)
+    builder = FormulaBuilder(bundle, name)
     builder.install()
 
 def cmd_uninstall(formula_name):

@@ -17,15 +17,12 @@ class BuildContext:
         self.env = env.env
         
 class FormulaBuilder:
-    def __init__(self, bundle, formula_name, kit=False):
+    def __init__(self, bundle, formula_name):
         self._bundle = bundle
         self._context = BuildContext(bundle.path, bundle.toolchain, bundle.arch)
         self._dep_graph = DepGraph()
         
-        if kit:
-            formula = formulamanager.get_kit(formula_name, self._context)
-        else:
-            formula = formulamanager.get(formula_name, self._context)
+        formula = formulamanager.get(formula_name, self._context)
         self._create_dep_graph(formula)
         
     def install(self):
@@ -35,7 +32,7 @@ class FormulaBuilder:
         
     def _install_visitor(self, fname):
         formula = formulamanager.get(fname, self._context)
-        if not self._bundle.is_installed(formula.name):
+        if not formula.is_kit and not self._bundle.is_installed(formula.name):
             build_dir_name = "build_{0}_{1}".format(self._bundle.toolchain, self._bundle.arch)
             build_dir = os.path.join(config.global_config().workspace_dir(), build_dir_name)
             if not os.path.exists(build_dir):
@@ -76,8 +73,7 @@ class FormulaBuilder:
                 
             self._dep_graph.add(formula.name, formula.depends_on.keys())
         
-        if not formula.is_kit:
-            self._dep_graph.add(formula.name, formula.depends_on.keys())        
+        self._dep_graph.add(formula.name, formula.depends_on.keys())        
         
         for dep_name, options in formula.depends_on.iteritems():
             #logging.getLogger().debug(formula.dir)
