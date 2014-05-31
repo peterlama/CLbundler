@@ -6,6 +6,7 @@ import shutil
 
 import config
 import system
+import exceptions
 
 def extract_source(filepath, dest_dir, dest_name):
     """
@@ -21,10 +22,23 @@ def extract_source(filepath, dest_dir, dest_name):
     system.extract(filepath, tmp_dir)
     
     src_dir = os.listdir(tmp_dir)[0]
-    os.rename(os.path.join(tmp_dir, src_dir), os.path.join(dest_dir, dest_name))
+    src_dir = os.path.join(tmp_dir, src_dir)
+    if not os.path.isdir(src_dir):
+        raise exceptions.SourceArchiveError("Expected a directory, got " + src_dir)
+        
+    os.rename(src_dir, os.path.join(dest_dir, dest_name))
     
     shutil.rmtree(tmp_dir)
 
+def _check_archive_url(url):
+    try:
+        response = urllib.urlopen(url)
+    except IOError:
+        raise exceptions.InvalidUrlError("Invalid URL: " + url)
+        
+    if not response.info().gettype().startswith("application"):
+        raise exceptions.InvalidUrlError(url + " does not seem to point to a archive file")
+         
 def _download_progress(blocks, block_size, file_size):
     percent = min(blocks*block_size*100.0 / file_size, 100)
     print("{0:3.1f}%".format(percent), end='\r')
@@ -44,6 +58,8 @@ def get_source(dest_dir, name, version, source_info):
         filepath = os.path.join(src_cache_dir, filename)
         dest_src_name = "{0}-{1}".format(name, version)
         dest_src_dir = os.path.join(dest_dir, dest_src_name)
+        
+        _check_archive_url(source_info["url"])
         
         if not os.path.exists(filepath):
             logging.getLogger().info("Downloading {}...".format(filename))

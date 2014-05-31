@@ -81,7 +81,8 @@ def extract(filepath, dest, verbose=False):
             try:
                 args = []
                 if not verbose:
-                    args.append("-qq ")
+                    args.append("-qq")
+                
                 args.extend([filepath, "-d", dest])
                 
                 run_cmd("unzip", args)

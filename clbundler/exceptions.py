@@ -12,3 +12,15 @@ class CalledProcessError(CLbundlerError, subprocess.CalledProcessError):
     
 class FileNotFoundError(CLbundlerError):
     pass
+
+class FormulaError(CLbundlerError):
+    pass
+    
+class FormulaExceptionError(FormulaError):
+    pass
+    
+class InvalidUrlError(CLbundlerError):
+    pass
+    
+class SourceArchiveError(CLbundlerError):
+    pass
