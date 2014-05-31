@@ -1,4 +1,5 @@
 import subprocess
+import traceback
 
 class CLbundlerError(Exception):
     pass
@@ -14,10 +15,15 @@ class FileNotFoundError(CLbundlerError):
     pass
 
 class FormulaError(CLbundlerError):
-    pass
+    def __init__(self, formula, message):
+        self.formula = formula
+        self.message = message
+    def __str__(self):
+        return "Formula '{0}': {1}".format(self.formula, self.message)
     
 class FormulaExceptionError(FormulaError):
-    pass
+    def __init__(self, formula):
+        super(FormulaExceptionError, self).__init__(formula, "\n" + traceback.format_exc())
     
 class InvalidUrlError(CLbundlerError):
     pass
