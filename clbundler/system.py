@@ -62,6 +62,10 @@ def extract(filepath, dest, verbose=False):
     try:
         if os.path.splitext(filepath)[0].endswith(".tar"):
             try:
+                if filepath.endswith("xz"):
+                    #check if XZ utils can be found -- use 7z if not
+                    run_cmd("unxz", ["-V"], silent=True)
+                    
                 args = ["-xf"]
                 if verbose:
                     args = ["-xvf"]
@@ -72,8 +76,8 @@ def extract(filepath, dest, verbose=False):
             except exceptions.CommandNotFoundError:
                 tar_filepath = os.path.join(dest, os.path.basename(os.path.splitext(filepath)[0]))
                 
-                run_cmd("7z", args_7z + [filepath], verbose)
-                run_cmd("7z", args_7z + [tar_filepath], verbose)
+                run_cmd("7z", args_7z + [filepath], not verbose)
+                run_cmd("7z", args_7z + [tar_filepath], not verbose)
                 
                 os.remove(tar_filepath)
                 
@@ -87,7 +91,7 @@ def extract(filepath, dest, verbose=False):
                 
                 run_cmd("unzip", args)
             except exceptions.CommandNotFoundError:
-                run_cmd("7z", args_7z + [filepath], verbose)
+                run_cmd("7z", args_7z + [filepath], not verbose)
 
         else:
             #for all other types (example .7z) try 7z
