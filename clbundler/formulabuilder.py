@@ -59,11 +59,11 @@ class FormulaBuilder:
             if patches:            
                 system.patch(patches, source_dir)
             
-            package = formula.build()
-            self._bundle.install(package)
+            fileset = formula.build()    
+            self._bundle.install(formula.name, formula.version, formula.depends_on.keys(), fileset)
             
             os.chdir(old_cwd)
-        
+
     def _create_dep_graph(self, formula):
         def _add_node(graph, formula):
             for dep_name, options in formula.depends_on.iteritems():

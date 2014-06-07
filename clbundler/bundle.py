@@ -1,15 +1,17 @@
 import os
 import shutil
 import sqlite3
+
+import fileutils
     
 class Package:
-    def __init__(self, name, version, deps, files_rel, files_dbg=[], files_dev=[]):
+    def __init__(self, name, version, deps, files_rel=[], files_dbg=[], files_dev=[]):
         self.name = name
         self.version = version
         self.deps = deps
-        self.files_rel = files_rel
-        self.files_dbg = files_dbg
-        self.files_dev = files_dev
+        self.files["rel"] = files_rel
+        self.files["dbg"] = files_dbg
+        self.files["dev"] = files_dev
 
 class LibBundle:
     def __init__(self):
@@ -79,34 +81,37 @@ class LibBundle:
 
         return row != None
         
-    def install(self, package):
-        if self.is_setup and not self.is_installed(package.name):
+    def install(self, name, version, deps, fileset):
+        if self.is_setup and not self.is_installed(name):
             connection = sqlite3.connect(self._manifest_path)
             cursor = connection.cursor()
             
+            files = {"rel":[], "dbg":[], "dev":[]}
+            
+            for category in fileset.categories:
+                for copy, exclude, dest in fileset.iter_items(category):
+                    files[category].extend(self._copy_into_bundle(copy, dest, exclude))
+                
             query = "INSERT INTO installed (name, version) VALUES (?,?)"
-            cursor.execute(query, (package.name, package.version))
+            cursor.execute(query, (name, version))
             
             query = "SELECT id FROM installed WHERE name = ?"
-            lib_id = cursor.execute(query, (package.name,)).fetchone()[0]
+            lib_id = cursor.execute(query, (name,)).fetchone()[0]
             
             query = "INSERT INTO files VALUES (?,?,?)"
-            #TODO: make sure mutually exclusive
-            for name in package.files_rel:
-                cursor.execute(query, (lib_id, name, "rel"))
-            for name in package.files_dbg:
-                cursor.execute(query, (lib_id, name, "dbg"))
-            for name in package.files_dev:
-                cursor.execute(query, (lib_id, name, "dev"))
+            
+            for category in files.keys():
+                for filename in files[category]:
+                    cursor.execute(query, (lib_id, filename, category))
 
-            for dep_name in package.deps:
-                cursor.execute("INSERT INTO dep_graph VALUES (?,?)", (package.name, dep_name))
+            for dep_name in deps:
+                cursor.execute("INSERT INTO dep_graph VALUES (?,?)", (name, dep_name))
                 
             connection.commit()
             connection.close()
         
     def uninstall(self, package_name):
-        if not self.is_installed(name):
+        if not self.is_installed(package_name):
             #raise LibPackError(name + " is not installed")
             return
         
@@ -125,16 +130,12 @@ class LibBundle:
         connection.close()
                 
         for item in files_delete:
-            path = os.path.join(self.path, item[0])
-            if os.path.isfile(path):
-                os.remove(path)
-            elif os.path.isdir(path):
-                shutil.rmtree(path, ignore_errors=True)
+            fileutils.remove(os.path.join(self.path, item[0]))
     
     def list_installed(self):
         if self.is_setup:
             connection = sqlite3.connect(self._manifest_path)
-            cursor = conn.cursor()
+            cursor = connection.cursor()
             
             query = "SELECT name FROM installed"
             result = cursor.execute(query, (package_name,)).fetchall()
@@ -146,7 +147,7 @@ class LibBundle:
     def list_files(self, package_name, category=""):
         if self.is_installed(package_name):
             connection = sqlite3.connect(self._manifest_path)
-            cursor = conn.cursor()
+            cursor = connection.cursor()
             
             query = "SELECT id FROM installed WHERE name = ?"
             lib_id = cursor.execute(query, (package_name,)).fetchone()[0]
@@ -170,3 +171,37 @@ class LibBundle:
         
     def delete_files(self, package_name, files):
         pass
+
+    def _copy_into_bundle(self, patterns, dest_dir, exclude_patterns=[]):
+        """copy files and directories described by patterns to dest_dir
+        
+        dest_dir is assumed to be relative to the bundle path
+        """
+        dest_dir = os.path.normpath(dest_dir).lstrip("/").lstrip("\\")
+        abs_dest_dir = os.path.join(self.path, dest_dir)
+
+        copied = set()
+
+        for pattern in patterns:
+            for path in fileutils.glob(pattern):
+                if not fileutils.match_list(path, exclude_patterns):
+                    if not pattern.count("**"):
+                        basename = os.path.basename(path)
+                        fileutils.copy(path, os.path.join(abs_dest_dir, basename), parents=True, 
+                                       replace=True, ignore=fileutils.copy_ignore(exclude_patterns))
+                        copied.add(os.path.join(dest_dir, basename))
+                    else:
+                        #strip the fixed portion of the path
+                        #we only want to keep the directory structure after the glob expression
+                        pattern_segments = fileutils.separate_path(pattern)
+                        path_segments = fileutils.separate_path(path)
+                        new_root_i = pattern_segments.index("**")
+                        dest = os.path.join(abs_dest_dir, *path_segments[new_root_i:])
+
+                        fileutils.copy(path, dest, parents=True, replace=True, 
+                                       ignore=fileutils.copy_ignore(exclude_patterns))
+
+                        #to save memory, only the first level after root is added to 'copied'
+                        copied.add(os.path.join(dest_dir, *path_segments[new_root_i:new_root_i+1]))
+
+        return copied

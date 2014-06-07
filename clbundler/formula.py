@@ -2,6 +2,8 @@ import os
 import sys
 import logging
 
+from fileset import FileSet
+
 class Formula(object):
     def __init__(self, context, options={}):
         self.context = context
