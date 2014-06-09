@@ -3,7 +3,8 @@ import shutil
 import sqlite3
 
 import fileutils
-    
+import exceptions
+   
 class Package:
     def __init__(self, name, version, deps, files_rel=[], files_dbg=[], files_dev=[]):
         self.name = name
@@ -81,8 +82,20 @@ class LibBundle:
 
         return row != None
         
-    def install(self, name, version, deps, fileset):
-        if self.is_setup and not self.is_installed(name):
+    def install(self, name, version, deps, fileset, force=False):
+        if not self.is_setup:
+            raise exceptions.BundleError("Instance of LibBundle not associated with any bundle on disk")
+            
+        if force and self.is_installed(name):
+            #first remove entries from the database to avoid duplication
+            query = "SELECT id FROM installed WHERE name = ?"
+            lib_id = cursor.execute(query, (name,)).fetchone()[0]
+
+            cursor.execute("DELETE FROM files WHERE id = ?", (lib_id,))
+            cursor.execute("DELETE FROM installed WHERE id = ?", (lib_id,))
+            cursor.execute("DELETE FROM dep_graph WHERE name = ?", (name,))
+            
+        if not self.is_installed(name):
             connection = sqlite3.connect(self._manifest_path)
             cursor = connection.cursor()
             
