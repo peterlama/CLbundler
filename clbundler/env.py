@@ -1,12 +1,15 @@
 import os
 import sys
+import subprocess
 
 from config import os_name, global_config
+import exceptions
 
 original_env = os.environ.copy()
 env = os.environ.copy()
 
-def setup_env():
+def setup_env(toolchain, arch):
+    """Set up environment for specified toolchain"""
     env = os.environ.copy()
     #set PATH to minimum to control exactly what software is found.
     path = ""
@@ -20,3 +23,52 @@ def setup_env():
         
     env["PATH"] = path
     
+    if toolchain.startswith("vc"):
+        setup_env_vc(toolchain[2:], arch)
+
+def environ_from_bat(bat_file, args):
+    """Get environment modified by .bat file"""
+    
+    #call 'set' in the same shell as the '.bat' file is run, and parse output
+    cmd = 'cmd.exe /s /c ""{0}" {1} && echo OutputSeparator && set"'.format(
+        bat_file, args)
+    output = subprocess.check_output(cmd, shell=True, env=env)
+    env_dump = output.split("OutputSeparator")[1]
+
+    new_environ = {}
+
+    for line in env_dump.strip().split("\r\n"):
+        pair = line.split("=")
+        new_environ[pair[0].upper()] = pair[1]
+
+    return new_environ
+    
+def setup_env_vc(version, arch):
+    """Set up Visual Studio build environment."""
+    global env
+    comntools = "VS{0}0COMNTOOLS".format(version)
+    
+    try:
+        comntools_path = env[comntools]
+    except KeyError:
+        raise exceptions.BuildConfigError("Could not find toolchain: vc" + version,
+                                          "No environment variable named '{0}'".format(comntools))
+        
+    vc_dir = os.path.normpath(comntools_path + "..\\..\\VC")
+    env_bat = vc_dir + "\\vcvarsall.bat"
+    
+    if not os.path.exists(env_bat):
+        raise exceptions.BuildConfigError("Could not find toolchain: vc" + version,
+                                          "File does not exist: " + env_bat)
+        
+    if arch == "x64":
+        if subprocess.check_output([env_bat, "amd64"]) == '':
+            env = environ_from_bat(env_bat, "amd64")
+        elif subprocess.check_output([env_bat, "x86_amd64"]) == '':
+            env = environ_from_bat(env_bat, "x86_amd64")
+        else:
+            raise exceptions.BuildConfigError("Could not find toolchain: vc" + version + " for x64")
+    else:
+        #vcvarsall.bat should allways be able to find x86 tools
+        env = environ_from_bat(env_bat, "x86")
+        

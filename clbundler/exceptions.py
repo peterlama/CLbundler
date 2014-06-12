@@ -33,3 +33,12 @@ class SourceArchiveError(CLbundlerError):
 
 class BundleError(CLbundlerError):
     pass
+    
+class BuildConfigError(CLbundlerError):
+    def __init__(self, message, detail=""):
+        self.message = message
+        self.detail = detail
+    def __str__(self):
+        if self.detail:
+            return self.message + "\n\n" + self.detail
+        return self.message

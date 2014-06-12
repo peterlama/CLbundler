@@ -70,4 +70,26 @@ def get_source(dest_dir, name, version, source_info):
             extract_source(filepath, dest_dir, dest_src_name)
         
         return dest_src_dir
-                    
+
+def patch_source(names, paths, src_dir):
+    """Apply patches in src_dir
+    
+    Arguments:
+    names -- list of patch names without extension
+    paths -- list of directories to search for patch files
+    src_dir -- directory to apply patches in
+    """
+    patches = []
+    for n in names:
+        patch = ""
+        for p in paths:
+            if os.path.exists(os.path.join(p, n + ".diff")):
+                patch = os.path.join(p, n + ".diff")
+                break          
+        if not patch:
+            raise exceptions.FileNotFoundError("Could not find patch: " + p + ".diff")
+            
+        patches.append(patch)
+        
+    system.patch(patches, src_dir)
+    

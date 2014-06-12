@@ -14,12 +14,12 @@ def cmd_new(path, toolchain, arch):
     fpath = path.format(platform=config.os_name(), toolchain=toolchain, arch=arch)
     if fpath.split(os.sep)[0] == fpath:
         fpath = os.path.join(config.global_config().root_dir(), fpath)
-    
+
     bundle = LibBundle()
     bundle.create(fpath, config.os_name(), toolchain, arch)
-    
+
     cmd_set(fpath)
-    
+
 def cmd_install(name):
     bundle = LibBundle()
     bundle.load(config.global_config().current_bundle())
@@ -27,10 +27,10 @@ def cmd_install(name):
     builder = FormulaBuilder(bundle, name)
     builder.install()
 
-def cmd_uninstall(formula_name):
+def cmd_uninstall(name):
     bundle = LibBundle()
     bundle.load(config.global_config().current_bundle())
 
-    formula = formulamanager.get(name)
-    builder = FormulaBuilder(bundle, formula)
-    builder.uninstall()
+    #name could be a path
+    package_name = os.path.splitext(os.path.basename(name))[0]
+    bundle.uninstall(package_name)

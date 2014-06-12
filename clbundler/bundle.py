@@ -125,8 +125,7 @@ class LibBundle:
         
     def uninstall(self, package_name):
         if not self.is_installed(package_name):
-            #raise LibPackError(name + " is not installed")
-            return
+            raise exceptions.BundleError(package_name + " is not installed")
         
         files_delete = self.list_files(package_name)
         
@@ -145,7 +144,7 @@ class LibBundle:
         for item in files_delete:
             fileutils.remove(os.path.join(self.path, item[0]))
     
-    def list_installed(self):
+    def list_installed(self, package_name):
         if self.is_setup:
             connection = sqlite3.connect(self._manifest_path)
             cursor = connection.cursor()
@@ -158,23 +157,25 @@ class LibBundle:
             return result
         
     def list_files(self, package_name, category=""):
-        if self.is_installed(package_name):
-            connection = sqlite3.connect(self._manifest_path)
-            cursor = connection.cursor()
+        if not self.is_installed(package_name):
+            raise exceptions.BundleError(package_name + " is not installed")
             
-            query = "SELECT id FROM installed WHERE name = ?"
-            lib_id = cursor.execute(query, (package_name,)).fetchone()[0]
-            
-            if category:
-                query = "SELECT name FROM files WHERE id = ? AND category = ?"
-                files = cursor.execute(query, (lib_id, category)).fetchall()
-            else:
-                query = "SELECT name FROM files WHERE id = ?"
-                files = cursor.execute(query, (lib_id,)).fetchall()
-            
-            connection.close()
-            
-            return files
+        connection = sqlite3.connect(self._manifest_path)
+        cursor = connection.cursor()
+        
+        query = "SELECT id FROM installed WHERE name = ?"
+        lib_id = cursor.execute(query, (package_name,)).fetchone()[0]
+        
+        if category:
+            query = "SELECT name FROM files WHERE id = ? AND category = ?"
+            files = cursor.execute(query, (lib_id, category)).fetchall()
+        else:
+            query = "SELECT name FROM files WHERE id = ?"
+            files = cursor.execute(query, (lib_id,)).fetchall()
+        
+        connection.close()
+        
+        return files
     
     def list_missing_files(self):
         pass
