@@ -70,12 +70,12 @@ def get(name, context, options={}, search_path=[]):
         try:
             cls = getattr(formula_module, name)
         except AttributeError:
-            raise exceptions.FormulaError(formula.name, "no class '{0}' "
-                                                        "in {1}".format(name, module_info[1]))
+            raise exceptions.FormulaError(name, "no class '{0}' "
+                                                "in {1}".format(name, module_info[1]))
 
         if not isinstance(cls, type) or (isinstance(cls, type) and not issubclass(cls, Formula)):
-            raise exceptions.FormulaError(formula.name, "object '{0}' in {1} is not a Formula "
-                                                        "subclass".format(name, module_info[1]))
+            raise exceptions.FormulaError(name, "object '{0}' in {1} is not a Formula "
+                                                "subclass".format(name, module_info[1]))
             
         formula = cls(context, options)
         _validate(formula, context.toolchain, context.arch)
