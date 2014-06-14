@@ -10,6 +10,7 @@ env = os.environ.copy()
 
 def setup_env(toolchain, arch):
     """Set up environment for specified toolchain"""
+    global env
     env = os.environ.copy()
     #set PATH to minimum to control exactly what software is found.
     path = ""
@@ -20,18 +21,18 @@ def setup_env(toolchain, arch):
     
     if global_config().current_bundle():    
         path = os.path.join(global_config().current_bundle(), "bin") + os.pathsep + path
+        env["CMAKE_PREFIX_PATH"] = global_config().current_bundle()
         
     env["PATH"] = path
     
     if toolchain.startswith("vc"):
         setup_env_vc(toolchain[2:], arch)
-
+    
 def environ_from_bat(bat_file, args):
     """Get environment modified by .bat file"""
     
     #call 'set' in the same shell as the '.bat' file is run, and parse output
-    cmd = 'cmd.exe /s /c ""{0}" {1} && echo OutputSeparator && set"'.format(
-        bat_file, args)
+    cmd = '"{0}" {1} && echo OutputSeparator && set'.format(bat_file, args)
     output = subprocess.check_output(cmd, shell=True, env=env)
     env_dump = output.split("OutputSeparator")[1]
 
@@ -40,7 +41,7 @@ def environ_from_bat(bat_file, args):
     for line in env_dump.strip().split("\r\n"):
         pair = line.split("=")
         new_environ[pair[0].upper()] = pair[1]
-
+    
     return new_environ
     
 def setup_env_vc(version, arch):
