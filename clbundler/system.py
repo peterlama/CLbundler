@@ -115,3 +115,9 @@ def patch(patches, path):
             run_cmd("patch", ["-f", "-p1", "-d", path, "-i", patch])
         except exceptions.CalledProcessError:
             logging.getLogger().warning("Failed to apply patch: " + os.path.basename(patch))
+
+def shell(args=[]):
+    if os_name() == "win":
+        run_cmd("cmd", args)
+    else:
+        run_cmd("bash", args)

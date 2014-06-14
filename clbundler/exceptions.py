@@ -42,3 +42,6 @@ class BuildConfigError(CLbundlerError):
         if self.detail:
             return self.message + "\n\n" + self.detail
         return self.message
+
+class AbortOperation(Exception):
+    pass

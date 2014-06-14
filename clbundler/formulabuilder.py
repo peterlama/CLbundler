@@ -1,6 +1,7 @@
 import os
 import logging
 
+from enum import Enum
 import formulamanager
 import sourcemanager
 import exceptions
@@ -20,21 +21,40 @@ class BuildContext:
                                         "tmp_install")
         
 class FormulaBuilder:
-    def __init__(self, bundle, formula_name):
+    def __init__(self, bundle):
         self._bundle = bundle
         self._context = BuildContext(bundle.path, bundle.toolchain, bundle.arch)
-        self._dep_graph = DepGraph()
         
+        self.hooks = Enum("pre_build","post_build", "post_install")
+        self._hook_functions = {self.hooks.pre_build:set(), 
+                                self.hooks.post_build:set(),
+                                self.hooks.post_install:set()}
+        
+    def add_hook(self, hook, function):
+        self._hook_functions[hook].add(function)
+    
+    def remove_hook(self, hook, function):
+        self._hook_functions[hook].remove(function)
+    
+    def _call_hook_functions(self, hook):
+        for f in self._hook_functions[hook]:
+            f()
+            
+    def install(self, formula_name):
         formula = formulamanager.get(formula_name, self._context)
+        
+        self._dep_graph = DepGraph()
         self._create_dep_graph(formula)
         
-    def install(self):
         env.setup_env(self._context.toolchain, self._context.arch)
+        self._context.env = env.env
+        #install dependencies
+        self._dep_graph.traverse(self._install)
         
-        self._dep_graph.traverse(self._install_visitor)
+        self._install(formula_name)
         
-    def _install_visitor(self, fname):
-        formula = formulamanager.get(fname, self._context)
+    def _install(self, formula_name):
+        formula = formulamanager.get(formula_name, self._context)
         if not formula.is_kit and not self._bundle.is_installed(formula.name):
             build_dir_name = "build_{0}_{1}".format(self._bundle.toolchain, self._bundle.arch)
             build_dir = os.path.join(config.global_config().workspace_dir(), build_dir_name)
@@ -57,9 +77,16 @@ class FormulaBuilder:
             #make sure we have clean install dir for each formula 
             if os.path.exists(self._context.install_dir):
                 fileutils.remove(self._context.install_dir)
-                
-            fileset = formula.build()    
+            
+            self._call_hook_functions(self.hooks.pre_build)
+            
+            fileset = formula.build()
+            
+            self._call_hook_functions(self.hooks.post_build)
+            
             self._bundle.install(formula.name, formula.version, formula.depends_on.keys(), fileset)
+            
+            self._call_hook_functions(self.hooks.post_install)
             
             os.chdir(old_cwd)
 
@@ -71,8 +98,6 @@ class FormulaBuilder:
                                                     [formula.dir]))
                 
             self._dep_graph.add(formula.name, formula.depends_on.keys())
-        
-        self._dep_graph.add(formula.name, formula.depends_on.keys())        
         
         for dep_name, options in formula.depends_on.iteritems():
             #logging.getLogger().debug(formula.dir)

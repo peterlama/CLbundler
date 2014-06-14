@@ -1,9 +1,13 @@
+from __future__ import print_function
 import os
-import config
 import logging
+
+import config
 from bundle import LibBundle
 from formulabuilder import FormulaBuilder
 import formulamanager
+import system
+import exceptions
 
 def cmd_set(path):
     #TODO: check if path is valid bundle
@@ -20,12 +24,26 @@ def cmd_new(path, toolchain, arch):
 
     cmd_set(fpath)
 
-def cmd_install(name):
+def cmd_install(name, interactive=False):
     bundle = LibBundle()
     bundle.load(config.global_config().current_bundle())
 
-    builder = FormulaBuilder(bundle, name)
-    builder.install()
+    builder = FormulaBuilder(bundle)
+    
+    if interactive:
+        def _start_shell():
+            print("Type 'exit' to continue with the installation, 'exit 1' to abort")
+            try:
+                system.shell()
+            except exceptions.CalledProcessError:
+                raise exceptions.AbortOperation
+        
+        builder.add_hook(builder.hooks.pre_build, _start_shell)
+    
+    try:    
+        builder.install(name)
+    except exceptions.AbortOperation:
+        print("Installation Aborted")
 
 def cmd_uninstall(name):
     bundle = LibBundle()
