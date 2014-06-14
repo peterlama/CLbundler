@@ -42,6 +42,20 @@ def _check_archive_url(url):
 def _download_progress(blocks, block_size, file_size):
     percent = min(blocks*block_size*100.0 / file_size, 100)
     print("{0:3.1f}%".format(percent), end='\r')
+
+def download_source(source_info):
+    if source_info["type"] == "archive":
+        src_cache_dir = config.global_config().src_dir()
+        filename = os.path.basename(source_info["url"])
+        filepath = os.path.join(src_cache_dir, filename)
+        
+        _check_archive_url(source_info["url"])
+        
+        if not os.path.exists(filepath):
+            logging.getLogger().info("Downloading {}...".format(filename))
+            urllib.urlretrieve(source_info["url"], filepath, _download_progress)
+            
+        return filepath
     
 def get_source(dest_dir, name, version, source_info):
     """
@@ -52,22 +66,14 @@ def get_source(dest_dir, name, version, source_info):
     'type': one of ['archive']
     'url': str
     """
+    src_path = download_source(souce_info)
+    dest_src_name = "{0}-{1}".format(name, version)
+    dest_src_dir = os.path.join(dest_dir, dest_src_name)
+        
     if source_info["type"] == "archive":
-        src_cache_dir = config.global_config().src_dir()
-        filename = os.path.basename(source_info["url"])
-        filepath = os.path.join(src_cache_dir, filename)
-        dest_src_name = "{0}-{1}".format(name, version)
-        dest_src_dir = os.path.join(dest_dir, dest_src_name)
-        
-        _check_archive_url(source_info["url"])
-        
-        if not os.path.exists(filepath):
-            logging.getLogger().info("Downloading {}...".format(filename))
-            urllib.urlretrieve(source_info["url"], filepath, _download_progress)
-        
         if not os.path.exists(dest_src_dir):
-            logging.getLogger().info("Extracting {}...".format(filename))
-            extract_source(filepath, dest_dir, dest_src_name)
+            logging.getLogger().info("Extracting {}...".format(os.path.basename(src_path)))
+            extract_source(src_path, dest_dir, dest_src_name)
         
         return dest_src_dir
 
