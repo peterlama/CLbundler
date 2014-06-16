@@ -17,8 +17,8 @@ class BuildContext:
         self.arch = arch
         self.os_name = config.os_name()
         self.env = env.env
-        self.install_dir = os.path.join(config.global_config().get("Paths", "workspace"),
-                                        "tmp_install")
+        self.workspace_dir = config.global_config().workspace_dir()
+        self.install_dir = os.path.join(self.workspace_dir, "tmp_install")
         
 class FormulaBuilder:
     def __init__(self, bundle):
@@ -29,6 +29,15 @@ class FormulaBuilder:
         self._hook_functions = {self.hooks.pre_build:set(), 
                                 self.hooks.post_build:set(),
                                 self.hooks.post_install:set()}
+        
+        workspace_dir = os.path.join(config.global_config().workspace_dir(),
+                                     "build_{0}_{1}".format(bundle.toolchain, bundle.arch))
+        config.global_config().set("Paths", "workspace", workspace_dir)
+        
+        if not os.path.isdir(workspace_dir):
+            os.mkdir(workspace_dir)
+        
+        self._context.workspace_dir = workspace_dir
         
     def add_hook(self, hook, function):
         self._hook_functions[hook].add(function)
@@ -56,12 +65,8 @@ class FormulaBuilder:
     def _install(self, formula_name):
         formula = formulamanager.get(formula_name, self._context)
         if not formula.is_kit and not self._bundle.is_installed(formula.name):
-            build_dir_name = "build_{0}_{1}".format(self._bundle.toolchain, self._bundle.arch)
-            build_dir = os.path.join(config.global_config().workspace_dir(), build_dir_name)
-            if not os.path.exists(build_dir):
-                os.mkdir(build_dir)
-                
-            src_dir = sourcemanager.get_source(build_dir, formula.name, formula.version, formula.source)
+            src_dir = sourcemanager.get_source(config.global_config().workspace_dir(), 
+                                               formula.name, formula.version, formula.source)
             
             old_cwd = os.getcwd()
             os.chdir(src_dir)
