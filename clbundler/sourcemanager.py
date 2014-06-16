@@ -66,7 +66,7 @@ def get_source(dest_dir, name, version, source_info):
     'type': one of ['archive']
     'url': str
     """
-    src_path = download_source(souce_info)
+    src_path = download_source(source_info)
     dest_src_name = "{0}-{1}".format(name, version)
     dest_src_dir = os.path.join(dest_dir, dest_src_name)
         
