@@ -61,42 +61,33 @@ def extract(filepath, dest, verbose=False):
     
     try:
         if os.path.splitext(filepath)[0].endswith(".tar"):
-            try:
-                if filepath.endswith("xz"):
-                    #check if XZ utils can be found -- use 7z if not
-                    run_cmd("unxz", ["-V"], silent=True)
-                    
-                args = ["-xf"]
-                if verbose:
-                    args = ["-xvf"]
-                #tar can't handle Windows paths
-                args.extend([unix_path(filepath), "-C", unix_path(dest)])
-                
-                run_cmd("tar", args)
-            except exceptions.CommandNotFoundError:
-                tar_filepath = os.path.join(dest, os.path.basename(os.path.splitext(filepath)[0]))
-                
+            if os_name() == "win":
                 run_cmd("7z", args_7z + [filepath], not verbose)
+
+                tar_filepath = os.path.join(dest, os.listdir(dest)[0])
                 run_cmd("7z", args_7z + [tar_filepath], not verbose)
                 
                 os.remove(tar_filepath)
+            else:
+                flags = "-x"
+                if verbose:
+                    flags = "-xv"
                 
+                run_cmd("tar", [flags, "-f", filepath, "-C", dest])
+        
         elif filepath.endswith(".zip"):
-            try:
-                args = []
-                if not verbose:
-                    args.append("-qq")
-                
-                args.extend([filepath, "-d", dest])
-                
-                run_cmd("unzip", args)
-            except exceptions.CommandNotFoundError:
+            if os_name() == "win":
                 run_cmd("7z", args_7z + [filepath], not verbose)
-
+            else:
+                flags = ""
+                if not verbose:
+                    flags = "-qq"
+                
+                run_cmd("unzip", [flags, filepath, "-d", dest])
         else:
             #for all other types (example .7z) try 7z
             
-            run_cmd("7z", args_7z + [filepath], verbose)
+            run_cmd("7z", args_7z + [filepath], not verbose)
 
             
     except exceptions.CommandNotFoundError:
