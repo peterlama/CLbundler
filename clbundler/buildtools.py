@@ -58,7 +58,7 @@ def vcproj_ext(version):
     else:
         return ".vcproj"
     
-def vcbuild(context, filepath, config, extras=[]):
+def vcbuild(context, filepath, config, extras=[], ignore_errors=False):
     """Build a Visual C++ project file or solution
     
     Uses vcbuild for vc9 and older, msbuild otherwise 
@@ -68,6 +68,7 @@ def vcbuild(context, filepath, config, extras=[]):
     filepath -- path to project or solution
     config -- the solution configuration to use
     extras -- extra command line options to pass to vcbuild or msbuild
+    ignore_errors -- ignore CalledProcessError or not
     """
     if context.arch == "x64":
         platform = "Win64"
@@ -77,8 +78,10 @@ def vcbuild(context, filepath, config, extras=[]):
     if int(vc_version(context.toolchain)) > 9:
         system.run_cmd("msbuild", [filepath, "/m", "/nologo", "/verbosity:minimal",
                                    "/p:Configuration=" + config,
-                                   "/p:Platform=" + platform] + extras)
+                                   "/p:Platform=" + platform] + extras, 
+                                   ignore_errors=ignore_errors)
     else:    
-        system.run_cmd("vcbuild", [filepath, "{0}|{1}".format(config, platform)] + extras)
+        system.run_cmd("vcbuild", [filepath, "{0}|{1}".format(config, platform)] + extras, 
+                       ignore_errors=ignore_errors)
     
     

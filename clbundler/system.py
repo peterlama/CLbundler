@@ -23,7 +23,7 @@ def unix_path(path):
         path = "/" + drive_letter[:-1] + path.replace("\\", "/")
     return path
     
-def run_cmd(name, args=[], silent=False):
+def run_cmd(name, args=[], silent=False, ignore_errors=False):
     """
     Run an executable file.
     Like a normal shell, name can be a path or a command that can be found by searching PATH.
@@ -51,7 +51,8 @@ def run_cmd(name, args=[], silent=False):
         else:
             subprocess.check_call(cmd_line, env=env.env)
     except subprocess.CalledProcessError as e:
-        raise exceptions.CalledProcessError(e.returncode, e.cmd)
+        if not ignore_errors:
+            raise exceptions.CalledProcessError(e.returncode, e.cmd)
     
 def extract(filepath, dest, verbose=False):
     """
