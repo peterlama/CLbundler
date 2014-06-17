@@ -1,3 +1,5 @@
+import os
+
 from clbundler import exceptions
 
 class FileSet(object):
@@ -7,6 +9,8 @@ class FileSet(object):
         
     def add(self, patterns, dest, exclude_patterns=[], category="rel"):
         try:
+            patterns = [os.path.abspath(p) for p in patterns if not os.path.isabs(p)]
+            exclude_patterns = [os.path.abspath(p) for p in exclude_patterns if not os.path.isabs(p)]
             self.files[category].append((patterns, exclude_patterns, dest))
         except KeyError as e:
             raise exceptions.CLbundlerError("Unknown file category '{}'".format(e.message))
