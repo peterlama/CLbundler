@@ -3,6 +3,7 @@ import os
 import urllib
 import logging
 import shutil
+import time
 
 import config
 import system
@@ -16,15 +17,25 @@ def extract_source(filepath, dest_dir, dest_name):
     tmp_dir = os.path.join(os.path.dirname(filepath), "tmp")
     if os.path.exists(tmp_dir):
         shutil.rmtree(tmp_dir)
-    os.mkdir(tmp_dir)
-    
+    try:
+        os.mkdir(tmp_dir)
+    except OSError:
+        #On Windows, it is sometimes necessary to wait a little after deleting a 
+        #directory before creating it again
+        time.sleep(0.01)
+        os.mkdir(tmp_dir)
+        
     #extract to a temporary directory so that we can get the dir name
     system.extract(filepath, tmp_dir)
     
-    src_dir = os.listdir(tmp_dir)[0]
-    src_dir = os.path.join(tmp_dir, src_dir)
-    if not os.path.isdir(src_dir):
-        raise exceptions.SourceArchiveError("Expected a directory, got " + src_dir)
+    contents = os.listdir(tmp_dir)
+    src_dir = None
+    for n in contents:
+        if os.path.isdir(os.path.join(tmp_dir, n)):
+            src_dir = os.path.join(tmp_dir, n)
+    
+    if not src_dir:
+        raise exceptions.SourceArchiveError("No directory in archive")
         
     os.rename(src_dir, os.path.join(dest_dir, dest_name))
     

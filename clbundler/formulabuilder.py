@@ -1,5 +1,6 @@
 import os
 import logging
+import time
 
 from enum import Enum
 import formulamanager
@@ -82,7 +83,14 @@ class FormulaBuilder:
             #make sure we have clean install dir for each formula 
             if os.path.exists(self._context.install_dir):
                 fileutils.remove(self._context.install_dir)
-            
+            try:
+                os.mkdir(self._context.install_dir)
+            except OSError:
+                #On Windows, it is sometimes necessary to wait a little after deleting a 
+                #directory before creating it again
+                time.sleep(0.01)
+                os.mkdir(self._context.install_dir)
+                
             self._call_hook_functions(self.hooks.pre_build)
             
             fileset = formula.build()
