@@ -8,9 +8,10 @@ import exceptions
 
 _formula_cache = {}
 
-_default_search_path = [os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Formula"))]
-_default_search_path.append(os.path.join(_default_search_path[0], config.os_name()))
-    
+_formula_search_path = [os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Formula"))]
+_formula_search_path.append(os.path.join(_formula_search_path[0], config.os_name()))
+_formula_search_path.extend(config.global_config().formula_dirs())
+
 def _validate(formula, toolchain, arch):
     if not formula.is_kit:
         required_attrs = ["version", "source", "supported"]
@@ -54,7 +55,7 @@ def get(name, context, options={}, search_path=[]):
             if file_path:
                 module_info = imp.find_module(name, [os.path.dirname(file_path)])
             else:
-                module_info = imp.find_module(name, search_path + _default_search_path)
+                module_info = imp.find_module(name, search_path + _formula_search_path)
         except ImportError:
             raise exceptions.FileNotFoundError("No formula named " + name)
             

@@ -28,6 +28,8 @@ class Config(SafeConfigParser):
         self.defaults()["root"] = Config._default_data_dir
         self.defaults()["workspace"] = "%(root)s" + os.path.sep + "workspace"
         self.defaults()["source"] = "%(root)s" + os.path.sep + "source"
+        self.defaults()["source"] = "%(root)s" + os.path.sep + "source"
+        self.defaults()["formula_dirs"] = "%(root)s" + os.path.sep + "formulas"
         
         if not self.has_section("Paths"):
             self.add_section("Paths")
@@ -57,6 +59,16 @@ class Config(SafeConfigParser):
         
     def src_dir(self):
         return self.get("Paths", "source")
+    
+    def formula_dirs(self):
+        paths_str = self.get("Paths", "formula_dirs")
+        paths = filter(bool, paths_str.split(";"))
+        #add platform specific directories
+        platform_paths = []
+        for p in paths:
+            platform_paths.append(os.path.join(p, os_name()))
+            
+        return paths + platform_paths
         
     def current_bundle(self):
         if self.has_option("Bundle", "path"):

@@ -106,14 +106,14 @@ class FormulaBuilder:
     def _create_dep_graph(self, formula):
         def _add_node(graph, formula):
             for dep_name, options in formula.depends_on.iteritems():
-                logging.getLogger().debug(formula.dir)
                 _add_node(graph, formulamanager.get(dep_name, self._context, options, 
                                                     [formula.dir]))
                 
             self._dep_graph.add(formula.name, formula.depends_on.keys())
         
         for dep_name, options in formula.depends_on.iteritems():
-            #logging.getLogger().debug(formula.dir)
+            search_path = [formula.dir]
+            if formula.is_kit: search_path.append(os.path.join(formula.dir, config.os_name()))
+            
             _add_node(self._dep_graph, formulamanager.get(dep_name, self._context, options, 
-                                                          [formula.dir]))
-        
+                                                          search_path))
