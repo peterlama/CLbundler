@@ -40,22 +40,26 @@ def _validate(formula, toolchain, arch):
                                                         "{0}, {1}".format(toolchain, arch))
     
 def get(name, context, options={}, search_path=[]):
-    file_path = ""
-    
     #name can be a path
     if os.path.exists(name):
-        file_path = name
-        
-    name = os.path.splitext(os.path.basename(name))[0]
+        search_path = os.path.dirname(name)
+        name = os.path.splitext(os.path.basename(name))[0]
+    elif name.count(".") == 1 and not (name.count("/") or name.count("\\")):
+        #formula is inside of a kit
+        kit_name, name = name.split(".")
+        search_path = []
+        for p in _formula_search_path:
+            search_path.append(os.path.join(p, kit_name))
+            search_path.append(os.path.join(p, kit_name, config.os_name()))
+    else:
+        name = os.path.splitext(os.path.basename(name))[0]
+        search_path += _formula_search_path
     
     if _formula_cache.has_key(name):
         return _formula_cache[name]
     else:
         try:
-            if file_path:
-                module_info = imp.find_module(name, [os.path.dirname(file_path)])
-            else:
-                module_info = imp.find_module(name, search_path + _formula_search_path)
+            module_info = imp.find_module(name, search_path)
         except ImportError:
             raise exceptions.FileNotFoundError("No formula named " + name)
             
