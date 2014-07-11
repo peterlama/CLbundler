@@ -24,7 +24,7 @@ def cmd_new(path, toolchain, arch):
 
     cmd_set(fpath)
 
-def cmd_install(name, interactive=False):
+def cmd_install(name, interactive=False, force=False):
     bundle = LibBundle()
     bundle.load(config.global_config().current_bundle())
 
@@ -41,7 +41,7 @@ def cmd_install(name, interactive=False):
         builder.add_hook(builder.hooks.pre_build, _start_shell)
     
     try:    
-        builder.install(name)
+        builder.install(name, force)
     except exceptions.AbortOperation:
         print("Installation Aborted")
 

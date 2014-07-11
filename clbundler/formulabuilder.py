@@ -50,7 +50,7 @@ class FormulaBuilder:
         for f in self._hook_functions[hook]:
             f()
             
-    def install(self, formula_name):
+    def install(self, formula_name, force=False):
         formula = formulamanager.get(formula_name, self._context)
         
         self._dep_graph = DepGraph()
@@ -61,11 +61,11 @@ class FormulaBuilder:
         #install dependencies
         self._dep_graph.traverse(self._install)
         
-        self._install(formula_name)
+        self._install(formula_name, force)
         
-    def _install(self, formula_name):
+    def _install(self, formula_name, force=False):
         formula = formulamanager.get(formula_name, self._context)
-        if not formula.is_kit and not self._bundle.is_installed(formula.name):
+        if not formula.is_kit and (force or not self._bundle.is_installed(formula.name)):
             src_dir = sourcemanager.get_source(config.global_config().workspace_dir(), 
                                                formula.name, formula.version, formula.source)
             
@@ -97,7 +97,7 @@ class FormulaBuilder:
             
             self._call_hook_functions(self.hooks.post_build)
             
-            self._bundle.install(formula.name, formula.version, formula.depends_on.keys(), fileset)
+            self._bundle.install(formula.name, formula.version, formula.depends_on.keys(), fileset, force)
             
             self._call_hook_functions(self.hooks.post_install)
             

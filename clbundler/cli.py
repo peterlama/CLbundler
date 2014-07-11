@@ -15,7 +15,7 @@ def on_install(parser, options, args):
     if not args:
         parser.error("no formula specified")
     for n in args:
-        commands.cmd_install(n, options.interactive_mode)
+        commands.cmd_install(n, options.interactive_mode, options.force_install)
 
 def on_uninstall(parser, options, args):
     if not args:
@@ -39,8 +39,8 @@ def setup_parser(parser):
     subcommand = Subcommand("install", callback=on_install,
                             usage=usage.format("install","FORMULA"),
                             short_help="Install a library into a bundle")
-    #subcommand.add_option("-f", "--force", dest="force_install", action="store_true",
-    #                      help="Force building formulae")
+    subcommand.add_option("-f", "--force", dest="force_install", action="store_true",
+                          help="Install even if already installed")
     subcommand.add_option("-i", "--interactive", dest="interactive_mode", action="store_true",
                           help="Start a shell after downloading and patching the source")
     parser.add_subcommand(subcommand)
