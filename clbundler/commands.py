@@ -48,7 +48,7 @@ def cmd_install(name, interactive=False, force=False):
 def cmd_uninstall(name):
     bundle = LibBundle()
     bundle.load(config.global_config().current_bundle())
-
+    builder = FormulaBuilder(bundle)
     #name could be a path
     package_name = os.path.splitext(os.path.basename(name))[0]
-    bundle.uninstall(package_name)
+    builder.uninstall(package_name)

@@ -137,6 +137,7 @@ class LibBundle:
 
         cursor.execute("DELETE FROM files WHERE id = ?", (lib_id,))
         cursor.execute("DELETE FROM installed WHERE id = ?", (lib_id,))
+        cursor.execute("DELETE FROM dep_graph WHERE name = ?", (package_name,))
         
         connection.commit()
         connection.close()
@@ -144,17 +145,29 @@ class LibBundle:
         for item in files_delete:
             fileutils.remove(os.path.join(self.path, item[0]))
     
-    def list_installed(self, package_name):
-        if self.is_setup:
-            connection = sqlite3.connect(self._manifest_path)
-            cursor = connection.cursor()
+    def installed(self):
+        connection = sqlite3.connect(self._manifest_path)
+        cursor = connection.cursor()
+         
+        result = [row[0] for row in cursor.execute("SELECT name FROM installed")]
+         
+        connection.close()
             
-            query = "SELECT name FROM installed"
-            result = cursor.execute(query, (package_name,)).fetchall()
-             
-            connection.close()
+        return result
+    
+    def deps(self, package_name):
+        if not self.is_installed(package_name):
+            raise exceptions.BundleError(package_name + " is not installed")
             
-            return result
+        connection = sqlite3.connect(self._manifest_path)
+        cursor = connection.cursor()
+        
+        query = "SELECT deps FROM dep_graph WHERE name = ?"
+        result = [row[0] for row in cursor.execute(query, (package_name,))]
+        
+        connection.close()
+        
+        return result
         
     def list_files(self, package_name, category=""):
         if not self.is_installed(package_name):

@@ -17,14 +17,18 @@ class DepGraph:
         for k in self._graph.keys():
             self._visit(k, callback)
     
-    def depends_on(self, n):
-        return self._graph[n]
+    def deps(self, node):
+        return self._graph[node]
         
-    def required_by(self, n):
-        result = []
-        for k in self._graph.keys():
-            if n in self._graph[k]:
-                 result.append(k)
+    def requires(self, node):
+        result = set()
+        
+        #first remove unnecessary nodes from the list
+        for n in set(self._graph.keys()) - set([node]) - set(self.deps(node)):
+            if node in self.deps(n) and node != n:
+                result.add(n)
+                result = result.union(self.requires(n))
+        
         return result
         
     def _visit(self, node, callback):

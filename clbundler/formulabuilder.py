@@ -62,6 +62,16 @@ class FormulaBuilder:
         self._dep_graph.traverse(self._install)
         
         self._install(formula_name, force)
+    
+    def uninstall(self, name):
+        dep_graph = DepGraph()
+        installed = self._bundle.installed()
+        
+        for n in installed:
+            dep_graph.add(n, self._bundle.deps(n))
+            
+        for n in dep_graph.requires(name):
+            self._bundle.uninstall(n)
         
     def _install(self, formula_name, force=False):
         formula = formulamanager.get(formula_name, self._context)
