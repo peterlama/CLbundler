@@ -22,6 +22,9 @@ def on_uninstall(parser, options, args):
         parser.error("no formula specified")
     for n in args:
         commands.cmd_uninstall(n)
+    
+def on_archive(parser, options, args):
+    commands.cmd_archive(options.path)
 
 def setup_parser(parser):
     parser.usage = "clbundler <command> [options]" 
@@ -49,3 +52,11 @@ def setup_parser(parser):
                           usage=usage.format("uninstall","FORMULA"),
                           short_help="Remove a library from a bundle")
     parser.add_subcommand(subcommand)
+    
+    subcommand = Subcommand("archive", callback=on_archive,
+                            usage="archive [options]",
+                            short_help="Create a compressed archive of current bundle")
+    subcommand.add_option("-p", "--path", dest="path",
+                          help="Specify a directory to create the archive in")
+    parser.add_subcommand(subcommand)
+    

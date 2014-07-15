@@ -52,3 +52,23 @@ def cmd_uninstall(name):
     #name could be a path
     package_name = os.path.splitext(os.path.basename(name))[0]
     builder.uninstall(package_name)
+
+def cmd_archive(path=None):
+    if path is None:
+        path = os.path.dirname(config.global_config().current_bundle())
+    
+    bundle_name = os.path.basename(config.global_config().current_bundle())
+    archive_path = os.path.join(path, bundle_name)
+    
+    if config.os_name() == "win":
+        try:
+            system.run_cmd("7z", ["a", "-r", "-x!*.pyc", 
+                           archive_path + ".7z", 
+                           config.global_config().current_bundle()])
+        except exceptions.CalledProcessError as e:
+            if e.returncode != 1:
+                raise
+    else:
+        system.run_cmd("zip", ["-r", "-x", "*.pyc", 
+                               archive_path + ".zip", 
+                               config.global_config().current_bundle()])
