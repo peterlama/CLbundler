@@ -27,18 +27,19 @@ class LibBundle:
     def load(self, path):
         self.path = path
         self._manifest_path = os.path.join(path, "MANIFEST.db")
-        if os.path.exists(self._manifest_path):
-            #TODO: error handling
-            connection = sqlite3.connect(self._manifest_path)
-            cursor = connection.cursor()
-            r = cursor.execute("SELECT platform, toolchain, arch FROM info").fetchone()
-            
-            self.patform = r[0]
-            self.toolchain = r[1]
-            self.arch = r[2]
-            self.is_setup = True
-            
-            connection.close()
+        
+        self._verify()
+        
+        connection = sqlite3.connect(self._manifest_path)
+        cursor = connection.cursor()
+        r = cursor.execute("SELECT platform, toolchain, arch FROM info").fetchone()
+        
+        self.patform = r[0]
+        self.toolchain = r[1]
+        self.arch = r[2]
+        self.is_setup = True
+        
+        connection.close()
             
             
     def create(self, path, platform, toolchain, arch):
@@ -232,3 +233,24 @@ class LibBundle:
                         copied.add(os.path.join(dest_dir, *path_segments[new_root_i:new_root_i+1]))
 
         return copied
+
+    def _verify(self):
+        if not os.path.exists(self._manifest_path):
+            raise exceptions.BundleError("Not a valid bundle: missing database")
+        
+        connection = sqlite3.connect(self._manifest_path)
+        cursor = connection.cursor()
+        
+        tables = {"dep_graph":["name", "deps"],
+                  "files":["id", "name", "category"],
+                  "info":["platform", "toolchain", "arch"],
+                  "installed":["id", "name", "version"]}
+        for table, columns in tables.iteritems():
+            try:
+                for cn in columns:
+                    cursor.execute("SELECT {0} FROM {1}".format(cn, table))
+            except sqlite3.OperationalError:
+                connection.close()
+                raise exceptions.BundleError("Not a valid bundle: database layout is incorrect")
+        
+        connection.close()

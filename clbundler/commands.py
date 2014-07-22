@@ -10,7 +10,9 @@ import system
 import exceptions
 
 def cmd_set(path):
-    #TODO: check if path is valid bundle
+    #raises an exception if path is not a valid bundle
+    bundle = LibBundle().load(path)
+    
     config.global_config().set("Bundle", "path", path)
     config.global_config().write()
 
