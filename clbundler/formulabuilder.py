@@ -69,9 +69,12 @@ class FormulaBuilder:
         
         for n in installed:
             dep_graph.add(n, self._bundle.deps(n))
-            
+        
+        #uninstall packages that require this package
         for n in dep_graph.requires(name):
             self._bundle.uninstall(n)
+        
+        self._bundle.uninstall(n)
         
     def _install(self, formula_name, force=False):
         formula = formulamanager.get(formula_name, self._context)
