@@ -101,3 +101,10 @@ def vcproj_upgrade(vcproj_file):
         system.run_cmd("vcupgrade", [vcproj_file])
     
     return new_name
+
+def distutils(context):
+    tmp_site_packages = context.install_dir + "\\Lib\site-packages"
+    makedirs(tmp_site_packages, exist_ok=True)
+    context.env["PYTHONPATH"] = tmp_site_packages
+    
+    system.run_cmd("python", ["setup.py", "install", "--prefix=" + context.install_dir])
