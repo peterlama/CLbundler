@@ -29,10 +29,11 @@ class CustomHelpFormatter(optparse.IndentedHelpFormatter):
         return ""
         
 class Subcommand:
-    def __init__(self, name, options=[], args=None, callback=None,
+    def __init__(self, name, options=None, args=None, callback=None,
                  usage="", short_help="", detailed_help=""):
         self.name = name
-        self.options = options
+        self.options = []
+        if options is not None: self.options = options
         self.args = args
         self.callback = callback
         self.usage = usage
