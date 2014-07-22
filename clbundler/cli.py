@@ -5,10 +5,10 @@ import config
 def on_new(parser, options, args):
     if len(args) < 3:
         parser.error("too few arguments")
-    if args[1] != "vc9" and args[0] != "vc12":
+    if not (args[1] == "vc9" or args[1] == "vc12"):
         parser.error("only vc9, vc12 are supported at the moment")
-    if args[2] != "x86":
-        parser.error("only x86 is supported at the moment")
+    if not (args[2] == "x86" or args[2] == "x64"):
+        parser.error("Unknown architecture '{0}' (needs to be one of [x86, x64])".format(args[2]))
     commands.cmd_new(args[0], args[1], args[2])
 
 def on_install(parser, options, args):
@@ -36,7 +36,7 @@ def setup_parser(parser):
     subcommand = Subcommand("new", callback=on_new,
                             usage=usage.format("new","PATH TOOLCHAIN ARCH"), 
                             short_help="Sets up a new bundle",
-                            detailed_help="Currently, only vc9 is the only supported TOOLCHAIN, and only x86")
+                            detailed_help="Currently, only vc9 is the only supported TOOLCHAIN")
     parser.add_subcommand(subcommand)
 
     subcommand = Subcommand("install", callback=on_install,

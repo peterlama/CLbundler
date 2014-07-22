@@ -28,7 +28,7 @@ def setup_env(toolchain, arch):
     if toolchain.startswith("vc"):
         setup_env_vc(toolchain[2:], arch)
     
-def environ_from_bat(bat_file, args):
+def environ_from_bat(bat_file, args=""):
     """Get environment modified by .bat file"""
     
     #call 'set' in the same shell as the '.bat' file is run, and parse output
@@ -57,13 +57,18 @@ def setup_env_vc(version, arch):
         
     vc_dir = os.path.normpath(comntools_path + "..\\..\\VC")
     env_bat = vc_dir + "\\vcvarsall.bat"
+    env64_bat = None
+    if os.path.exists(vc_dir + "\\bin\\vcvars64.bat"):
+        env64_bat = vc_dir + "\\bin\\vcvars64.bat"
     
     if not os.path.exists(env_bat):
         raise exceptions.BuildConfigError("Could not find toolchain: vc" + version,
                                           "File does not exist: " + env_bat)
         
     if arch == "x64":
-        if subprocess.check_output([env_bat, "amd64"]) == '':
+        if env64_bat is not None:
+            env = environ_from_bat(env64_bat)
+        elif subprocess.check_output([env_bat, "amd64"]) == '':
             env = environ_from_bat(env_bat, "amd64")
         elif subprocess.check_output([env_bat, "x86_amd64"]) == '':
             env = environ_from_bat(env_bat, "x86_amd64")

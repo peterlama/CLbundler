@@ -1,6 +1,7 @@
 import os
 
 import system
+from fileutils import makedirs
 
 def cmake_generator(toolchain, arch):
     """Return name of CMake generator for toolchain"""
@@ -58,7 +59,7 @@ def vcproj_ext(version):
     else:
         return ".vcproj"
     
-def vcbuild(context, filepath, config, extras=[], ignore_errors=False):
+def vcbuild(context, filepath, config, platform=None, use_env=False, extra=None, ignore_errors=False):
     """Build a Visual C++ project file or solution
     
     Uses vcbuild for vc9 and older, msbuild otherwise 
@@ -70,18 +71,33 @@ def vcbuild(context, filepath, config, extras=[], ignore_errors=False):
     extras -- extra command line options to pass to vcbuild or msbuild
     ignore_errors -- ignore CalledProcessError or not
     """
-    if context.arch == "x64":
-        platform = "Win64"
-    else:
-        platform = "Win32"
-        
+    if platform is None:
+        if context.arch == "x64":
+            platform = "x64"
+        else:
+            platform = "Win32"
+    if extra is None:
+        extra = []
+    
+    use_env_opt = ""
+    
     if int(vc_version(context.toolchain)) > 9:
+        if use_env:
+            use_env_opt = "/p:UseEnv=true"  
         system.run_cmd("msbuild", [filepath, "/m", "/nologo", "/verbosity:minimal",
                                    "/p:Configuration=" + config,
-                                   "/p:Platform=" + platform] + extras, 
+                                   "/p:Platform=" + platform, use_env_opt] + extra, 
                                    ignore_errors=ignore_errors)
-    else:    
-        system.run_cmd("vcbuild", [filepath, "{0}|{1}".format(config, platform)] + extras, 
+    else: 
+        if use_env:
+            use_env_opt = "/useenv"        
+        system.run_cmd("vcbuild", [filepath, "{0}|{1}".format(config, platform), use_env_opt] + extra, 
                        ignore_errors=ignore_errors)
     
+def vcproj_upgrade(vcproj_file):
+    new_name = os.path.splitext(vcproj_file)[0] + ".vcxproj"
     
+    if not os.path.exists(new_name):
+        system.run_cmd("vcupgrade", [vcproj_file])
+    
+    return new_name
