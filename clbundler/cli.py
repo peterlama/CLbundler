@@ -11,6 +11,11 @@ def on_new(parser, options, args):
         parser.error("Unknown architecture '{0}' (needs to be one of [x86, x64])".format(args[2]))
     commands.cmd_new(args[0], args[1], args[2])
 
+def on_use(parser, options, args):
+    if not args:
+        parser.error("no bundle specified")
+    commands.cmd_set(args[0])
+    
 def on_install(parser, options, args):
     if not args:
         parser.error("no formula specified")
@@ -37,6 +42,11 @@ def setup_parser(parser):
                             usage=usage.format("new","PATH TOOLCHAIN ARCH"), 
                             short_help="Sets up a new bundle",
                             detailed_help="Currently, only vc9 is the only supported TOOLCHAIN")
+    parser.add_subcommand(subcommand)
+    
+    subcommand = Subcommand("use", callback=on_use,
+                            usage=usage.format("new","PATH"), 
+                            short_help="Use an already existing bundle")
     parser.add_subcommand(subcommand)
 
     subcommand = Subcommand("install", callback=on_install,
