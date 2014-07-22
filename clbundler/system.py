@@ -5,6 +5,7 @@ import logging
 from config import os_name
 import env
 import exceptions
+import fileutils
 
 _commands = {}
 
@@ -68,7 +69,7 @@ def extract(filepath, dest, verbose=False):
                 tar_filepath = os.path.join(dest, os.listdir(dest)[0])
                 run_cmd("7z", args_7z + [tar_filepath], not verbose)
                 
-                os.remove(tar_filepath)
+                fileutils.remove(tar_filepath)
             else:
                 flags = "-x"
                 if verbose:
