@@ -85,6 +85,9 @@ class LibBundle:
     def install(self, name, version, deps, fileset, force=False):
         if not self.is_setup:
             raise exceptions.BundleError("Instance of LibBundle not associated with any bundle on disk")
+        
+        connection = sqlite3.connect(self._manifest_path)
+        cursor = connection.cursor()
             
         if force and self.is_installed(name):
             #first remove entries from the database to avoid duplication
@@ -95,10 +98,7 @@ class LibBundle:
             cursor.execute("DELETE FROM installed WHERE id = ?", (lib_id,))
             cursor.execute("DELETE FROM dep_graph WHERE name = ?", (name,))
             
-        if not self.is_installed(name):
-            connection = sqlite3.connect(self._manifest_path)
-            cursor = connection.cursor()
-            
+        if force or not self.is_installed(name):
             files = {"rel":[], "dbg":[], "dev":[]}
             
             for category in fileset.categories:
@@ -120,8 +120,8 @@ class LibBundle:
             for dep_name in deps:
                 cursor.execute("INSERT INTO dep_graph VALUES (?,?)", (name, dep_name))
                 
-            connection.commit()
-            connection.close()
+        connection.commit()
+        connection.close()
         
     def uninstall(self, package_name):
         if not self.is_installed(package_name):
@@ -208,7 +208,7 @@ class LibBundle:
         abs_dest_dir = os.path.join(self.path, dest_dir)
 
         copied = set()
-
+        
         for pattern in patterns:
             for path in fileutils.glob(pattern):
                 if not fileutils.match_list(path, exclude_patterns):
