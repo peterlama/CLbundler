@@ -1,4 +1,4 @@
-from __future__ import print_function
+import sys
 import os
 import urllib
 import logging
@@ -52,7 +52,8 @@ def _check_archive_url(url):
          
 def _download_progress(blocks, block_size, file_size):
     percent = min(blocks*block_size*100.0 / file_size, 100)
-    print("{0:3.1f}%".format(percent), end='\r')
+    sys.stdout.write("{0:3.1f}%\r".format(percent))
+    sys.stdout.flush()
 
 def download_source(source_info):
     if source_info["type"] == "archive":
@@ -63,7 +64,7 @@ def download_source(source_info):
         _check_archive_url(source_info["url"])
         
         if not os.path.exists(filepath):
-            logging.getLogger().info("Downloading {}...".format(filename))
+            logging.getLogger().info("Downloading {0}...".format(filename))
             urllib.urlretrieve(source_info["url"], filepath, _download_progress)
             
         return filepath
@@ -83,7 +84,7 @@ def get_source(dest_dir, name, version, source_info):
         
     if source_info["type"] == "archive":
         if not os.path.exists(dest_src_dir):
-            logging.getLogger().info("Extracting {}...".format(os.path.basename(src_path)))
+            logging.getLogger().info("Extracting {0}...".format(os.path.basename(src_path)))
             extract_source(src_path, dest_dir, dest_src_name)
         
         return dest_src_dir
