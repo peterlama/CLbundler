@@ -61,8 +61,9 @@ class Config(SafeConfigParser):
         return self.get("Paths", "source")
     
     def formula_dirs(self):
-        paths_str = self.get("Paths", "formula_dirs")
-        paths = filter(bool, paths_str.split(";"))
+        paths_str = self.get("DEFAULT", "formula_dirs") + os.pathsep
+        paths_str += self.get("Paths", "formula_dirs")
+        paths = filter(bool, paths_str.split(os.pathsep))
         #add platform specific directories
         platform_paths = []
         for p in paths:

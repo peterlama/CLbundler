@@ -31,6 +31,12 @@ def on_uninstall(parser, options, args):
 def on_archive(parser, options, args):
     commands.cmd_archive(options.path)
 
+def on_formula_path(parser, options, args):
+    if not args:
+        print(config.global_config().get("Paths", "formula_dirs"))
+    else:
+        commands.cmd_set_formula_path(args[0], options.append)
+
 def setup_parser(parser):
     parser.usage = "clbundler <command> [options]" 
     parser.description = "Type 'clbundler <command> --help' for more information "\
@@ -45,7 +51,7 @@ def setup_parser(parser):
     parser.add_subcommand(subcommand)
     
     subcommand = Subcommand("use", callback=on_use,
-                            usage=usage.format("new","PATH"), 
+                            usage=usage.format("use","PATH"), 
                             short_help="Use an already existing bundle")
     parser.add_subcommand(subcommand)
 
@@ -70,3 +76,10 @@ def setup_parser(parser):
                           help="Specify a directory to create the archive in")
     parser.add_subcommand(subcommand)
     
+    subcommand = Subcommand("formula-path", callback=on_formula_path,
+                            usage=usage.format("use","PATH"),
+                            short_help="Set the formula search path",
+                            detailed_help="If no arguments are given, the current search path is printed")
+    subcommand.add_option("-a", "--append", dest="append", action="store_true",
+                          help="Append the current value instead replacing")
+    parser.add_subcommand(subcommand)

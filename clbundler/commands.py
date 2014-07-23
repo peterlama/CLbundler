@@ -74,3 +74,14 @@ def cmd_archive(path=None):
         system.run_cmd("zip", ["-r", "-x", "*.pyc", 
                                archive_path + ".zip", 
                                config.global_config().current_bundle()])
+
+def cmd_set_formula_path(path, append=False):
+    if append:
+        old_value = config.global_config().get("Paths", "formula_dirs")
+        if not old_value.endswith(os.pathsep):
+            old_value += os.pathsep
+        config.global_config().set("Paths", "formula_dirs", old_value + path)
+    else:
+        config.global_config().set("Paths", "formula_dirs", path)
+        
+    config.global_config().write()
