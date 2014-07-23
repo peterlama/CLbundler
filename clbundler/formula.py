@@ -25,7 +25,7 @@ class Formula(object):
                 setattr(self, k, options[k])
             else:
                 logging.getLogger().debug("Formula '{0}' has no option "
-                                          "'{1}'".format({self.name, k}))
+                                          "'{1}'".format(self.name, k))
                 
     def add_deps(self, deps):
         for d in deps:
