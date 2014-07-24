@@ -74,7 +74,7 @@ class FormulaBuilder:
         for n in dep_graph.requires(name):
             self._bundle.uninstall(n)
         
-        self._bundle.uninstall(n)
+        self._bundle.uninstall(name)
         
     def _install(self, formula_name, force=False):
         formula = formulamanager.get(formula_name, self._context)
