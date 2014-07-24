@@ -126,7 +126,7 @@ class FormulaBuilder:
         
         for dep_name, options in formula.depends_on.iteritems():
             search_path = [formula.dir]
-            if formula.is_kit: search_path.append(os.path.join(formula.dir, config.os_name()))
+            search_path.append(os.path.join(formula.dir, config.os_name()))
             
             _add_node(self._dep_graph, formulamanager.get(dep_name, self._context, options, 
                                                           search_path))
