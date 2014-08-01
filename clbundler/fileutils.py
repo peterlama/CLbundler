@@ -51,9 +51,16 @@ def copy(src, dest, parents=False, replace=False, ignore=None):
             if os.path.exists(dest):
                 remove(dest)
         
-        shutil.copytree(src, dest, ignore=ignore)
+        shutil.copytree(src, dest, symlinks=True, ignore=ignore)
     else:
-        shutil.copy(src, dest)
+        if os.path.islink(src):
+            if os.path.isdir(dest):
+                dest = os.path.join(dest, os.path.basename(src))
+            if os.path.exists(dest):
+                remove(dest)
+            os.symlink(os.readlink(src), dest)
+        else:
+            shutil.copy(src, dest)
 
 def copy_ignore(patterns):
     """Return a function that can be used as shutil.copytree() ignore argument.
