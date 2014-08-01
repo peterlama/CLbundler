@@ -5,8 +5,6 @@ import config
 def on_new(parser, options, args):
     if len(args) < 3:
         parser.error("too few arguments")
-    if not (args[1] == "vc9" or args[1] == "vc12"):
-        parser.error("only vc9, vc12 are supported at the moment")
     if not (args[2] == "x86" or args[2] == "x64"):
         parser.error("Unknown architecture '{0}' (needs to be one of [x86, x64])".format(args[2]))
     commands.cmd_new(args[0], args[1], args[2])
