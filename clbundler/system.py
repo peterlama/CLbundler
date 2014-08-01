@@ -62,7 +62,7 @@ def extract(filepath, dest, verbose=False):
     args_7z = ["x", "-y", "-o" + dest]
     
     try:
-        if os.path.splitext(filepath)[0].endswith(".tar"):
+        if os.path.splitext(filepath)[0].endswith(".tar") or filepath.endswith(".tgz"):
             if os_name() == "win":
                 run_cmd("7z", args_7z + [filepath], not verbose)
 
