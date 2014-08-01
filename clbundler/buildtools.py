@@ -3,6 +3,11 @@ import os
 import system
 from fileutils import makedirs
 
+def configure(context, options=[]):
+    args = ["--prefix=" + context.install_dir]
+    args.extend(options)
+    system.run_cmd("./configure", args)
+
 def cmake_generator(toolchain, arch):
     """Return name of CMake generator for toolchain"""
     generator = ""
