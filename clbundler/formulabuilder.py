@@ -7,7 +7,7 @@ import formulamanager
 import sourcemanager
 import exceptions
 import env
-from depgraph import DepGraph
+from graph import Graph
 import config 
 import fileutils
 
@@ -50,28 +50,30 @@ class FormulaBuilder:
         for f in self._hook_functions[hook]:
             f()
             
-    def install(self, formula_name, force=False):
-        formula = formulamanager.get(formula_name, self._context)
+    def install(self, formula_spec, force=False):
+        formula_name, formula_path = formulamanager.parse_specifier(formula_spec)
         
-        self._dep_graph = DepGraph()
-        self._create_dep_graph(formula)
+        self._dep_graph = Graph()
+        self._create_dep_graph(formula_name, formula_path)
         
         env.setup_env(self._context.toolchain, self._context.arch)
         self._context.env = env.env
+        
         #install dependencies
         self._dep_graph.traverse(self._install)
         
         self._install(formula_name, force)
     
     def uninstall(self, name):
-        dep_graph = DepGraph()
+        dep_graph = Graph()
         installed = self._bundle.installed()
         
         for n in installed:
-            dep_graph.add(n, self._bundle.deps(n))
+            dep_graph.add_node(n, self._bundle.deps(n))
         
-        #uninstall packages that require this package
-        for n in dep_graph.requires(name):
+        node = dep_graph.get_node(name)
+        #first uninstall packages that require this package
+        for n in node.parents:
             self._bundle.uninstall(n)
         
         self._bundle.uninstall(name)
@@ -116,17 +118,18 @@ class FormulaBuilder:
             
             os.chdir(old_cwd)
 
-    def _create_dep_graph(self, formula):
+    def _create_dep_graph(self, formula_name, formula_path=[]):
         def _add_node(graph, formula):
             for dep_name, options in formula.depends_on.iteritems():
-                _add_node(graph, formulamanager.get(dep_name, self._context, options, 
-                                                    [formula.dir]))
+                dep_formula = formulamanager.get(dep_name, self._context, options, formula_path)
+                _add_node(self._dep_graph, dep_formula)
                 
-            self._dep_graph.add(formula.name, formula.depends_on.keys())
-        
+            self._dep_graph.add_node(formula.name, formula.depends_on.keys())
+          
+        formula = formulamanager.get(formula_name, self._context, search_path=formula_path)
         for dep_name, options in formula.depends_on.iteritems():
-            search_path = [formula.dir]
-            search_path.append(os.path.join(formula.dir, config.os_name()))
-            
             _add_node(self._dep_graph, formulamanager.get(dep_name, self._context, options, 
-                                                          search_path))
+                                                          formula_path))
+        
+        
+
