@@ -53,31 +53,46 @@ class FormulaBuilder:
     def install(self, formula_spec, force=False):
         formula_name, formula_path = formulamanager.parse_specifier(formula_spec)
         
-        self._dep_graph = Graph()
-        self._create_dep_graph(formula_name, formula_path)
+        if not self._bundle.is_installed(formula_name) or force:
+            self._dep_graph = Graph()
+            self._create_dep_graph(formula_name, formula_path)
+            
+            env.setup_env(self._context.toolchain, self._context.arch)
+            self._context.env = env.env
+            
+            #install dependencies
+            self._dep_graph.traverse(self._install)
+            
+            self._install(formula_name, force)
+        else:
+            print("{0} is already installed".format(formula_name))
         
-        env.setup_env(self._context.toolchain, self._context.arch)
-        self._context.env = env.env
-        
-        #install dependencies
-        self._dep_graph.traverse(self._install)
-        
-        self._install(formula_name, force)
     
     def uninstall(self, name):
-        dep_graph = Graph()
-        installed = self._bundle.installed()
-        
-        for n in installed:
-            dep_graph.add_node(n, self._bundle.deps(n))
-        
-        node = dep_graph.get_node(name)
-        #first uninstall packages that require this package
-        for n in node.parents:
-            self._bundle.uninstall(n)
-        
-        self._bundle.uninstall(name)
-        
+        if self._bundle.is_installed(name):
+            dep_graph = Graph()
+            installed = self._bundle.installed()
+            
+            for n in installed:
+                dep_graph.add_node(n, self._bundle.deps(n))
+            
+            node = dep_graph.get_node(name)
+            
+            if node.parents:
+                #first uninstall packages that require this package
+                logging.getLogger().info("The following packages depend on {0} "
+                                         "and will also be uninstalled:".format(name))
+                logging.getLogger().info(", ".join(node.parents))
+                for n in node.parents:
+                    logging.getLogger().info("Uninstalling {0}...".format(n))
+                    self._bundle.uninstall(n)
+            
+            logging.getLogger().info("Uninstalling {0}...".format(name))
+            self._bundle.uninstall(name)
+            logging.getLogger().info("Done")
+        else:
+            print("{0} is not installed".format(name))
+    
     def _install(self, formula_name, force=False):
         formula = formulamanager.get(formula_name, self._context)
         if not formula.is_kit and (force or not self._bundle.is_installed(formula.name)):
@@ -107,14 +122,18 @@ class FormulaBuilder:
                 os.mkdir(self._context.install_dir)
                 
             self._call_hook_functions(self.hooks.pre_build)
+            logging.getLogger().info("Building {0}...".format(formula.name))
             
             fileset = formula.build()
             
             self._call_hook_functions(self.hooks.post_build)
+            logging.getLogger().info("Done")
+            logging.getLogger().info("Installing {0}...".format(formula.name))
             
             self._bundle.install(formula.name, formula.version, formula.depends_on.keys(), fileset, force)
             
             self._call_hook_functions(self.hooks.post_install)
+            logging.getLogger().info("Done")
             
             os.chdir(old_cwd)
 
