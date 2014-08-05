@@ -24,7 +24,7 @@ def on_uninstall(parser, options, args):
     if not args:
         parser.error("no formula specified")
     for n in args:
-        commands.cmd_uninstall(n)
+        commands.cmd_uninstall(n, options.keep_dependent)
     
 def on_archive(parser, options, args):
     commands.cmd_archive(options.path)
@@ -63,8 +63,10 @@ def setup_parser(parser):
     parser.add_subcommand(subcommand)
     
     subcommand = Subcommand("uninstall", callback=on_uninstall,
-                          usage=usage.format("uninstall","FORMULA"),
-                          short_help="Remove a library from a bundle")
+                            usage=usage.format("uninstall","PACKAGE"),
+                            short_help="Remove a library from a bundle")
+    subcommand.add_option("-k", "--keep", dest="keep_dependent", action="store_true",
+                          help="Do not also uninstall packages that require PACKAGE")
     parser.add_subcommand(subcommand)
     
     subcommand = Subcommand("archive", callback=on_archive,
@@ -81,3 +83,4 @@ def setup_parser(parser):
     subcommand.add_option("-a", "--append", dest="append", action="store_true",
                           help="Append the current value instead replacing")
     parser.add_subcommand(subcommand)
+

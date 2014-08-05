@@ -47,13 +47,12 @@ def cmd_install(formula_spec, interactive=False, force=False):
     except exceptions.AbortOperation:
         print("Installation Aborted")
 
-def cmd_uninstall(name):
+def cmd_uninstall(package_name, keep_dependent=False):
     bundle = LibBundle()
     bundle.load(config.global_config().current_bundle())
     builder = FormulaBuilder(bundle)
-    #name could be a path
-    package_name = os.path.splitext(os.path.basename(name))[0]
-    builder.uninstall(package_name)
+    
+    builder.uninstall(package_name, keep_dependent)
 
 def cmd_archive(path=None):
     if path is None:

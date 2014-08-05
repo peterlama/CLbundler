@@ -68,7 +68,7 @@ class FormulaBuilder:
             print("{0} is already installed".format(formula_name))
         
     
-    def uninstall(self, name):
+    def uninstall(self, name, keep_dependent=False):
         if self._bundle.is_installed(name):
             dep_graph = Graph()
             installed = self._bundle.installed()
@@ -78,7 +78,7 @@ class FormulaBuilder:
             
             node = dep_graph.get_node(name)
             
-            if node.parents:
+            if not keep_dependent and node.parents:
                 #first uninstall packages that require this package
                 logging.getLogger().info("The following packages depend on {0} "
                                          "and will also be uninstalled:".format(name))
