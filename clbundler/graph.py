@@ -64,6 +64,9 @@ class Graph:
     def has_node(self, name):
         return self._graph.has_key(name)
     
+    def print_graph(self):
+        self.traverse(self._print_node)
+    
     def roots(self):
         """Return a list of the nodes that do not have any parents."""
         root_nodes = []
@@ -79,9 +82,17 @@ class Graph:
         
         if not start_nodes:
             start_nodes = self._graph.keys()
-              
+            #start_nodes = ["shiboken"]
+        
         for n in start_nodes:
             self._visit(n, callback, callback_args)
+    
+    def _print_node(self, name):
+        node = self.get_node(name)
+        print("----")
+        print(node.name)
+        print("children: " + ", ".join(node.children))
+        print("parents: " + ", ".join(node.parents))
         
     def _visit(self, name, callback=None, callback_args=[]):
         if not self._graph[name].marked:
