@@ -2,6 +2,7 @@ import os
 import shutil
 import sqlite3
 
+from fileset import Categories
 import fileutils
 import exceptions
    
@@ -100,9 +101,9 @@ class LibBundle:
             cursor.execute("DELETE FROM dep_graph WHERE name = ?", (name,))
             
         if force or not self.is_installed(name):
-            files = {"rel":[], "dbg":[], "dev":[]}
+            files = dict([(c, []) for c in Categories])
             
-            for category in fileset.categories:
+            for category in Categories:
                 for copy, exclude, dest in fileset.iter_items(category):
                     files[category].extend(self._copy_into_bundle(copy, dest, exclude))
                 
@@ -114,7 +115,7 @@ class LibBundle:
             
             query = "INSERT INTO files VALUES (?,?,?)"
             
-            for category in files.keys():
+            for category in Categories:
                 for filename in files[category]:
                     cursor.execute(query, (lib_id, filename, category))
 
@@ -170,7 +171,7 @@ class LibBundle:
         
         return result
         
-    def list_files(self, package_name, category=""):
+    def list_files(self, package_name, category_name=None):
         if not self.is_installed(package_name):
             raise exceptions.BundleError(package_name + " is not installed")
             
@@ -180,7 +181,8 @@ class LibBundle:
         query = "SELECT id FROM installed WHERE name = ?"
         lib_id = cursor.execute(query, (package_name,)).fetchone()[0]
         
-        if category:
+        if category_name:
+            category = getattr(Categories, category_name)
             query = "SELECT name FROM files WHERE id = ? AND category = ?"
             files = cursor.execute(query, (lib_id, category)).fetchall()
         else:

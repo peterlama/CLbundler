@@ -6,3 +6,6 @@ class Enum(object):
         for attr in enum_attrs:
             setattr(self, attr, i)
             i += 1
+    
+    def __iter__(self):
+        return vars(self).values().__iter__()

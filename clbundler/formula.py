@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 
-from fileset import FileSet
+from fileset import Categories, FileSet
 import system
 from buildtools import *
 
