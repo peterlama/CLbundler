@@ -1,2 +1,2 @@
 @echo off
-C:\Python27\python.exe -m clbundler %*
+python %~dp0clbundler %*
