@@ -104,9 +104,11 @@ class FormulaBuilder:
             
             if formula.patches:
                 path1 = os.path.join(formula.dir, "patches", formula.name)
-                path2 = os.path.join(formula.dir, "..", "patches", formula.name)
-                patch_dirs = [os.path.join(path1, self._bundle.toolchain), path1,
-                              os.path.join(path2, self._bundle.toolchain), path2]
+                if formula.dir.endswith(config.os_name()):
+                    path2 = os.path.normpath(os.path.join(formula.dir, "..", "patches", formula.name))
+                else:
+                    path2 = os.path.join(formula.dir, config.os_name(), "patches", formula.name)
+                patch_dirs = [path1, path2]
                 
                 sourcemanager.patch_source(formula.patches, patch_dirs, src_dir) 
             

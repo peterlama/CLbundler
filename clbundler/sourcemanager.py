@@ -105,7 +105,7 @@ def patch_source(names, paths, src_dir):
                 patch = os.path.join(p, n + ".diff")
                 break          
         if not patch:
-            raise exceptions.FileNotFoundError("Could not find patch: " + p + ".diff")
+            raise exceptions.FileNotFoundError("Could not find patch: {0}.diff in \n{1}".format(n, paths))
             
         patches.append(patch)
         
