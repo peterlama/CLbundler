@@ -31,6 +31,9 @@ class InvalidUrlError(CLbundlerError):
 class SourceArchiveError(CLbundlerError):
     pass
 
+class SourceError(CLbundlerError):
+    pass
+    
 class BundleError(CLbundlerError):
     pass
     

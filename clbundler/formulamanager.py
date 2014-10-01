@@ -41,11 +41,10 @@ def _validate(formula, toolchain, arch):
             raise exceptions.FormulaError(formula.name, "'version' is empty")
             
         try:
-            if formula.source["type"] not in source_types:
-                raise exceptions.FormulaError(formula.name, "value of source['type'] is "
-                                                            "not one of {0}".format(source_types))
+            if not formula.source["type"]:
+                raise exceptions.FormulaError(formula.name, "source['type'] is empty")
             if not formula.source["url"]:
-                raise exceptions.FormulaError(formula.name, "value of source['url'] is empty")
+                raise exceptions.FormulaError(formula.name, "source['url'] is empty")
         except KeyError as e:
             raise exceptions.FormulaError(formula.name, "'source' does not have key "
                                                         "'{0}'".format(e.message))
