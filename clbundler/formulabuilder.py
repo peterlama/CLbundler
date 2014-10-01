@@ -1,6 +1,7 @@
 import os
 import logging
 import time
+import shutil
 
 from enum import Enum
 import formulamanager
@@ -49,11 +50,11 @@ class FormulaBuilder:
     def _call_hook_functions(self, hook):
         for f in self._hook_functions[hook]:
             f()
-            
-    def install(self, formula_spec, force=False):
+      
+    def install(self, formula_spec, options):
         formula_name, formula_path = formulamanager.parse_specifier(formula_spec)
         
-        if not self._bundle.is_installed(formula_name) or force:
+        if not self._bundle.is_installed(formula_name) or options.force:
             self._dep_graph = Graph()
             self._create_dep_graph(formula_name, formula_path)
             
@@ -63,7 +64,7 @@ class FormulaBuilder:
             #install dependencies
             self._dep_graph.traverse(self._install)
             
-            self._install(formula_name, force)
+            self._install(formula_name, options)
         else:
             print("{0} is already installed".format(formula_name))
         
@@ -93,9 +94,14 @@ class FormulaBuilder:
         else:
             print("{0} is not installed".format(name))
     
-    def _install(self, formula_name, force=False):
+    def _install(self, formula_name, options):
         formula = formulamanager.get(formula_name, self._context)
-        if not formula.is_kit and (force or not self._bundle.is_installed(formula.name)):
+        if not formula.is_kit and (options.force or not self._bundle.is_installed(formula.name)):
+            if options.clean_src:
+                build_src_dir = os.path.join(self._context.build_dir, "{0}-{1}".format(formula.name, formula.version))
+                if os.path.exists(build_src_dir):
+                    shutil.rmtree(build_src_dir)
+            
             src_dir = sourcemanager.get_source(config.global_config().build_dir(), 
                                                formula.name, formula.version, formula.source)
             
@@ -132,7 +138,7 @@ class FormulaBuilder:
             logging.getLogger().info("Done")
             logging.getLogger().info("Installing {0}...".format(formula.name))
             
-            self._bundle.install(formula.name, formula.version, formula.depends_on.keys(), fileset, force)
+            self._bundle.install(formula.name, formula.version, formula.depends_on.keys(), fileset, options.force)
             
             self._call_hook_functions(self.hooks.post_install)
             logging.getLogger().info("Done")

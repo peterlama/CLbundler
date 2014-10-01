@@ -26,13 +26,13 @@ def cmd_new(path, toolchain, arch):
 
     cmd_set(fpath)
 
-def cmd_install(formula_spec, interactive=False, force=False):
+def cmd_install(formula_spec, options):
     bundle = LibBundle()
     bundle.load(config.global_config().current_bundle())
 
     builder = FormulaBuilder(bundle)
     
-    if interactive:
+    if options.interactive:
         def _start_shell():
             print("Type 'exit' to continue with the installation, 'exit 1' to abort")
             try:
@@ -42,8 +42,8 @@ def cmd_install(formula_spec, interactive=False, force=False):
         
         builder.add_hook(builder.hooks.pre_build, _start_shell)
     
-    try:    
-        builder.install(formula_spec, force)
+    try:
+        builder.install(formula_spec, options)
     except exceptions.AbortOperation:
         print("Installation Aborted")
 
