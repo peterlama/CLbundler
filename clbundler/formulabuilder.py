@@ -31,14 +31,14 @@ class FormulaBuilder:
                                 self.hooks.post_build:set(),
                                 self.hooks.post_install:set()}
         
-        workspace_dir = os.path.join(config.global_config().workspace_dir(),
+        build_dir = os.path.join(config.global_config().workspace_dir(),
                                      "build_{0}_{1}".format(bundle.toolchain, bundle.arch))
-        config.global_config().set("Paths", "workspace", workspace_dir)
+        config.global_config().set("Paths", "build", build_dir)
         
-        if not os.path.isdir(workspace_dir):
-            os.mkdir(workspace_dir)
+        if not os.path.isdir(build_dir):
+            os.mkdir(build_dir)
         
-        self._context.workspace_dir = workspace_dir
+        self._context.build_dir = build_dir
         
     def add_hook(self, hook, function):
         self._hook_functions[hook].add(function)
@@ -96,7 +96,7 @@ class FormulaBuilder:
     def _install(self, formula_name, force=False):
         formula = formulamanager.get(formula_name, self._context)
         if not formula.is_kit and (force or not self._bundle.is_installed(formula.name)):
-            src_dir = sourcemanager.get_source(config.global_config().workspace_dir(), 
+            src_dir = sourcemanager.get_source(config.global_config().build_dir(), 
                                                formula.name, formula.version, formula.source)
             
             old_cwd = os.getcwd()
