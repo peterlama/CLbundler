@@ -14,19 +14,30 @@ class Formula(object):
             os.path.dirname(sys.modules[type(self).__module__].__file__))
         self.is_kit = False
         
+        self.add_option("variant", "release")
         self.set_options(options)
         
         self.depends_on = {}
         self.patches = []
-        
+    
+    def add_option(self, name, default_value):
+        setattr(self, name, default_value)
+    
+    def get_option(name):
+        try:
+            return getattr(self, name)
+        except AttributeError:
+            return None
+      
     def set_options(self, options):
         for k in options.keys():
             if hasattr(self, k):
-                setattr(self, k, options[k])
+                if options[k] is not None:
+                    setattr(self, k, options[k])
             else:
-                logging.getLogger().debug("Formula '{0}' has no option "
-                                          "'{1}'".format(self.name, k))
-                
+                logging.getLogger().warning("Formula {0}: unknown option "
+                                            "'{1}'".format(self.name, name))
+    
     def add_deps(self, deps):
         for d in deps:
             if isinstance(d, str):

@@ -62,9 +62,9 @@ class FormulaBuilder:
             self._context.env = env.env
             
             #install dependencies
-            self._dep_graph.traverse(self._install)
+            self._dep_graph.traverse(self._install, callback_args=[{"variant":options.variant}])
             
-            self._install(formula_name, options)
+            self._install(formula_name, **vars(options))
         else:
             print("{0} is already installed".format(formula_name))
         
@@ -94,10 +94,25 @@ class FormulaBuilder:
         else:
             print("{0} is not installed".format(name))
     
-    def _install(self, formula_name, options):
+    def _install(self, formula_name, **kwargs):
         formula = formulamanager.get(formula_name, self._context)
-        if not formula.is_kit and (options.force or not self._bundle.is_installed(formula.name)):
-            if options.clean_src:
+        formula_options = {}
+        force_install = False
+        clean_src = False
+        
+        if kwargs.has_key("formula_options"):
+            formula_options = kwargs["formula_options"]
+        if kwargs.has_key("variant"):
+            formula_options["variant"] = kwargs["variant"]
+        if kwargs.has_key("force"):
+            force_install = kwargs["force"]
+        if kwargs.has_key("clean_src"):
+            clean_src = kwargs["clean_src"]
+        
+        formula.set_options(formula_options)
+        
+        if not formula.is_kit and (force_install or not self._bundle.is_installed(formula.name)):
+            if clean_src:
                 build_src_dir = os.path.join(self._context.build_dir, "{0}-{1}".format(formula.name, formula.version))
                 if os.path.exists(build_src_dir):
                     shutil.rmtree(build_src_dir)
@@ -138,7 +153,7 @@ class FormulaBuilder:
             logging.getLogger().info("Done")
             logging.getLogger().info("Installing {0}...".format(formula.name))
             
-            self._bundle.install(formula.name, formula.version, formula.depends_on.keys(), fileset, options.force)
+            self._bundle.install(formula.name, formula.version, formula.depends_on.keys(), fileset, force_install)
             
             self._call_hook_functions(self.hooks.post_install)
             logging.getLogger().info("Done")
