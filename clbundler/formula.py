@@ -38,12 +38,12 @@ class Formula(object):
                 logging.getLogger().warning("Formula {0}: unknown option "
                                             "'{1}'".format(self.name, name))
     
-    def add_deps(self, deps):
-        for d in deps:
+    def add_deps(self, *args):
+        for d in args:
             if isinstance(d, str):
                 self.depends_on[d] = {}
             elif isinstance(d, dict):
                 self.depends_on.update(d)
             else:
-                logging.getLogger().debug("Unsupported type in dependency list "
-                                          "for formula '{0}'".format(self.name))
+                logging.getLogger().debug("Unsupported type '{0}' for {1} "
+                                          "dependency".format(type(d), self.name))
