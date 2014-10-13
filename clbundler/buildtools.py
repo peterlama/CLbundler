@@ -56,6 +56,19 @@ def vc_version(toolchain):
     """Return the Visual C++ version from the toolchain string"""
     if toolchain.startswith("vc"):
         return toolchain[2:]
+        
+def vc_version_year(toolchain):
+    """Return the Visual C++ version year from the toolchain string"""
+    if toolchain == "vc9":
+        return "2008"
+    elif toolchain == "vc10":
+        return "2010"
+    elif toolchain == "vc11":
+        return "2012"
+    elif toolchain == "vc12":
+        return "2013"
+    else:
+        return ""
     
 def vcproj_ext(version):
     """Return file extension for Visual C++ projects"""
