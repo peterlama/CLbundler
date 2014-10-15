@@ -75,7 +75,7 @@ class Graph:
                 root_nodes.append(self._graph[k])
         return root_nodes
     
-    def traverse(self, callback=None, callback_args=[], start_nodes=[]):
+    def traverse(self, callback=None, callback_args={}, start_nodes=[]):
         """Perform a depth first traversal of the graph."""
         for k in self._graph.keys():
             self._graph[k].marked = False
@@ -94,7 +94,7 @@ class Graph:
         print("children: " + ", ".join(node.children))
         print("parents: " + ", ".join(node.parents))
         
-    def _visit(self, name, callback=None, callback_args=[]):
+    def _visit(self, name, callback=None, callback_args={}):
         if not self._graph[name].marked:
             for n in self._graph[name].children:
                 if not self._graph[n].marked:
@@ -102,5 +102,5 @@ class Graph:
                 
             self._graph[name].marked = True
             if callback:
-                callback(name, *callback_args)        
+                callback(name, **callback_args)        
 

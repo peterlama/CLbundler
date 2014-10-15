@@ -62,7 +62,7 @@ class FormulaBuilder:
             self._context.env = env.env
             
             #install dependencies
-            self._dep_graph.traverse(self._install, callback_args=[{"variant":options.variant}])
+            self._dep_graph.traverse(self._install, callback_args={"variant":options.variant})
             
             self._install(formula_name, **vars(options))
         else:
