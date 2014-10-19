@@ -184,10 +184,10 @@ class LibBundle:
         if category_name:
             category = getattr(Categories, category_name)
             query = "SELECT name FROM files WHERE id = ? AND category = ?"
-            files = cursor.execute(query, (lib_id, category)).fetchall()
+            files = [r[0] for r in cursor.execute(query, (lib_id, category))]
         else:
             query = "SELECT name FROM files WHERE id = ?"
-            files = cursor.execute(query, (lib_id,)).fetchall()
+            files = [r[0] for r in cursor.execute(query, (lib_id,))]
         
         connection.close()
         

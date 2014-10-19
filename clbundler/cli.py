@@ -37,6 +37,12 @@ def on_formula_path(parser, options, args):
         print(config.global_config().get("Paths", "formula_dirs"))
     else:
         commands.cmd_set_formula_path(args[0], options.append)
+        
+def on_list(parser, options, args):
+    if not args:
+        parser.error("no package name specified")
+    else:
+        commands.cmd_list(args[0], options.category)
 
 def setup_parser(parser):
     parser.usage = "clbundler <command> [options]" 
@@ -95,4 +101,11 @@ def setup_parser(parser):
                             usage=usage.format("info","[PACKAGE]"),
                             short_help="Show information about installed packages",
                             detailed_help="If PACKAGE is not given, all installed packages will be shown")
+    parser.add_subcommand(subcommand)
+    
+    subcommand = Subcommand("list", callback=on_list,
+                            usage=usage.format("list","PACKAGE"),
+                            short_help="List files that belong to PACKAGE")
+    subcommand.add_option("-c", "--category", dest="category", choices=("run", "run_dbg", "build"),
+                          help="Only show files belonging to a specific category:\n{run, run_dbg, build}")
     parser.add_subcommand(subcommand)

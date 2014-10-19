@@ -95,3 +95,11 @@ def cmd_info():
     print("\nInstalled:")
     for info in bundle.list_installed():
         print("{0:<15}{1:<10}".format(info[0], info[1]))
+
+def cmd_list(package_name, category=None):
+    bundle = LibBundle()
+    bundle.load(config.global_config().current_bundle())
+    
+    files = bundle.list_files(package_name, category)
+    for n in files:
+        print(n)
