@@ -23,7 +23,19 @@ class AbstractSourceDownloader(object):
     
     def stage(self):
         pass
-    
+        
+    def _src_needs_update(self, dir1, dir2):
+        new_dir = False;
+        if not os.listdir(dir1):
+            new_dir = True;
+        
+        if not new_dir and os.path.getmtime(dir1) < os.path.getmtime(dir2):
+            return True
+        elif new_dir:
+            return True
+        
+        return False
+
 class ArchiveSourceDownloader(AbstractSourceDownloader):
     def __init__(self, name, version, source_info):
         super(ArchiveSourceDownloader, self).__init__(name, version, source_info)
@@ -103,16 +115,16 @@ class GitSourceDownloader(AbstractSourceDownloader):
     def stage(self):
         if not os.path.exists(self.dest_dir):
             os.mkdir(self.dest_dir)
-        options = ["--git-dir=" + self.git_dir, 
-                   "--work-tree=" + self.dest_dir, 
-                   "checkout", "-q", "-f"]
-        if self.revision:
-            options.append(self.revision)
         
-        logging.getLogger().info("Checking out {0}...".format(self.revision))
-        system.run_cmd("git",  options)
-        
-
+        if self._src_needs_update(self.dest_dir, self.git_dir):
+            options = ["--git-dir=" + self.git_dir, 
+                       "--work-tree=" + self.dest_dir, 
+                       "checkout", "-q", "-f"]
+            if self.revision:
+                options.append(self.revision)
+            
+            logging.getLogger().info("Checking out {0}...".format(self.revision))
+            system.run_cmd("git",  options)
 
 class MercurialSourceDownloader(AbstractSourceDownloader):
     def __init__(self, name, version, source_info):
@@ -141,13 +153,14 @@ class MercurialSourceDownloader(AbstractSourceDownloader):
         if not os.path.exists(self.dest_dir):
             os.mkdir(self.dest_dir)
         
-        old_cwd = os.getcwd()
-        os.chdir(self.hg_dir)
-        
-        logging.getLogger().info("Checking out {0}...".format(self.revision))        
-        system.run_cmd("hg",  ["archive", "-S", "-y", "-r", self.revision, "-t", "files", self.dest_dir])
-        
-        os.chdir(old_cwd)
+        if self._src_needs_update(self.dest_dir, self.hg_dir):
+            old_cwd = os.getcwd()
+            os.chdir(self.hg_dir)
+            
+            logging.getLogger().info("Checking out {0}...".format(self.revision))        
+            system.run_cmd("hg",  ["archive", "-S", "-y", "-r", self.revision, "-t", "files", self.dest_dir])
+            
+            os.chdir(old_cwd)
     
 class SubversionSourceDownloader(AbstractSourceDownloader):
     def __init__(self, name, version, source_info):
@@ -178,8 +191,12 @@ class SubversionSourceDownloader(AbstractSourceDownloader):
                 os.chdir(old_cwd)
         
     def stage(self):
-        logging.getLogger().info("Copying to build directory...")      
-        system.run_cmd("svn",  ["export", "--force", self.svn_dir, self.dest_dir])
+        if not os.path.exists(self.dest_dir):
+            os.mkdir(self.dest_dir)
+        
+        if self._src_needs_update(self.dest_dir, self.svn_dir):
+            logging.getLogger().info("Copying to build directory...")      
+            system.run_cmd("svn",  ["export", "--force", self.svn_dir, self.dest_dir])
     
 downloaders = {
     "archive":ArchiveSourceDownloader,
