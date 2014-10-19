@@ -62,8 +62,8 @@ def setup_parser(parser):
                           help="Start a shell after downloading and patching the source")
     subcommand.add_option("--clean-src", dest="clean_src", action="store_true",
                           help="Use clean source tree")
-    subcommand.add_option("--variant", dest="variant", action="store", choices=("release", "debug", "release_debug"),
-                          help="Specify build variant {release, debug, release_and_debug}")
+    subcommand.add_option("--variant", dest="variant", action="store", choices=("release", "debug", "release+debug"),
+                          help="Specify build variant {release, debug, release+debug}")
     parser.add_subcommand(subcommand)
     
     subcommand = Subcommand("uninstall", callback=on_uninstall,
