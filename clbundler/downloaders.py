@@ -145,7 +145,7 @@ class MercurialSourceDownloader(AbstractSourceDownloader):
         os.chdir(self.hg_dir)
         
         logging.getLogger().info("Checking out {0}...".format(self.revision))        
-        system.run_cmd("hg",  ["-S", "-y", "-r", self.revision, "-t", "files", self.dest_dir])
+        system.run_cmd("hg",  ["archive", "-S", "-y", "-r", self.revision, "-t", "files", self.dest_dir])
         
         os.chdir(old_cwd)
     
@@ -184,6 +184,6 @@ class SubversionSourceDownloader(AbstractSourceDownloader):
 downloaders = {
     "archive":ArchiveSourceDownloader,
     "git":GitSourceDownloader,
-    "mercurial":MercurialSourceDownloader,
-    "subversion":SubversionSourceDownloader
+    "hg":MercurialSourceDownloader,
+    "svn":SubversionSourceDownloader
 }
