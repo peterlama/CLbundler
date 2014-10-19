@@ -29,6 +29,9 @@ def on_uninstall(parser, options, args):
 def on_archive(parser, options, args):
     commands.cmd_archive(options.path)
 
+def on_info(parser, options, args):
+    commands.cmd_info()
+    
 def on_formula_path(parser, options, args):
     if not args:
         print(config.global_config().get("Paths", "formula_dirs"))
@@ -87,4 +90,9 @@ def setup_parser(parser):
     subcommand.add_option("-a", "--append", dest="append", action="store_true",
                           help="Append the current value instead replacing")
     parser.add_subcommand(subcommand)
-
+    
+    subcommand = Subcommand("info", callback=on_info,
+                            usage=usage.format("info","[PACKAGE]"),
+                            short_help="Show information about installed packages",
+                            detailed_help="If PACKAGE is not given, all installed packages will be shown")
+    parser.add_subcommand(subcommand)

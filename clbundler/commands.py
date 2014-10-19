@@ -84,3 +84,14 @@ def cmd_set_formula_path(path, append=False):
         config.global_config().set("Paths", "formula_dirs", path)
         
     config.global_config().write()
+
+def cmd_info():
+    bundle = LibBundle()
+    bundle.load(config.global_config().current_bundle())
+    
+    print("Bundle: " + bundle.path)
+    print("Toolchain: " + bundle.toolchain)
+    print("Architecture: " + bundle.arch)
+    print("\nInstalled:")
+    for info in bundle.list_installed():
+        print("{0:<15}{1:<10}".format(info[0], info[1]))

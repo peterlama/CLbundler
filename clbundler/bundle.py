@@ -147,16 +147,6 @@ class LibBundle:
         for item in files_delete:
             fileutils.remove(os.path.join(self.path, item[0]))
     
-    def installed(self):
-        connection = sqlite3.connect(self._manifest_path)
-        cursor = connection.cursor()
-         
-        result = [row[0] for row in cursor.execute("SELECT name FROM installed")]
-         
-        connection.close()
-            
-        return result
-    
     def deps(self, package_name):
         if not self.is_installed(package_name):
             raise exceptions.BundleError(package_name + " is not installed")
@@ -166,6 +156,16 @@ class LibBundle:
         
         query = "SELECT deps FROM dep_graph WHERE name = ?"
         result = [row[0] for row in cursor.execute(query, (package_name,))]
+        
+        connection.close()
+        
+        return result
+    
+    def list_installed(self):
+        connection = sqlite3.connect(self._manifest_path)
+        cursor = connection.cursor()
+        
+        result = [(r[0], r[1]) for r in cursor.execute("SELECT name, version FROM installed")]
         
         connection.close()
         
