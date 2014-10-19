@@ -105,9 +105,13 @@ def patch(patches, path):
         
     for patch in patches:
         try:
-            run_cmd("patch", ["-f", "-p1", "-d", path, "-i", patch])
+            run_cmd("patch", ["--dry-run", "-R", "-f", "-p1", "-d", path, "-i", patch], silent=True)
+            logging.getLogger().info("Patch already applied: " + os.path.basename(patch))
         except exceptions.CalledProcessError:
-            logging.getLogger().warning("Failed to apply patch: " + os.path.basename(patch))
+            try:
+                run_cmd("patch", ["-f", "-p1", "-d", path, "-i", patch])
+            except exceptions.CalledProcessError:
+                logging.getLogger().warning("Failed to apply patch: " + os.path.basename(patch))
 
 def shell(args=[]):
     if os_name() == "win":
