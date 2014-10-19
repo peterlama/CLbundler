@@ -72,10 +72,10 @@ class FormulaBuilder:
     def uninstall(self, name, keep_dependent=False):
         if self._bundle.is_installed(name):
             dep_graph = Graph()
-            installed = self._bundle.installed()
+            installed = self._bundle.list_installed()
             
             for n in installed:
-                dep_graph.add_node(n, self._bundle.deps(n))
+                dep_graph.add_node(n[0], self._bundle.deps(n[0]))
             
             node = dep_graph.get_node(name)
             

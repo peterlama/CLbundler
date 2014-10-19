@@ -145,7 +145,7 @@ class LibBundle:
         connection.close()
                 
         for item in files_delete:
-            fileutils.remove(os.path.join(self.path, item[0]))
+            fileutils.remove(os.path.join(self.path, item))
     
     def deps(self, package_name):
         if not self.is_installed(package_name):
