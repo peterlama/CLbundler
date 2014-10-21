@@ -9,7 +9,10 @@ import fileutils
 
 _commands = {}
 
-def _find_cmd(name, env_path):
+def find_cmd(name, env_path, search_orginal=True):
+    if search_orginal:
+        env_path = env_path + env.original_env["PATH"]
+    
     paths = env_path.split(os.pathsep)
     
     for path in paths:
@@ -37,7 +40,7 @@ def run_cmd(name, args=[], silent=False, ignore_errors=False):
         if not _commands.has_key(name):
             if os_name() == "win" and not os.path.splitext(name)[1]:
                 name = name + ".exe"
-            file_path = _find_cmd(name, env.env["PATH"] + env.original_env["PATH"])
+            file_path = find_cmd(name, env.env["PATH"])
             _commands[name] = file_path
         else:
             file_path = _commands[name]
