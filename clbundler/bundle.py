@@ -1,6 +1,7 @@
 import os
 import shutil
 import sqlite3
+import logging
 
 from fileset import Categories
 import fileutils
@@ -144,8 +145,11 @@ class LibBundle:
         connection.commit()
         connection.close()
                 
-        for item in files_delete:
-            fileutils.remove(os.path.join(self.path, item))
+        for name in files_delete:
+            if os.path.exists(os.path.join(self.path, name)):
+                fileutils.remove(os.path.join(self.path, name))
+            else:
+                logging.getLogger().warning("'{0}' does not exist".format(os.path.join(self.path, name)))
     
     def deps(self, package_name):
         if not self.is_installed(package_name):
