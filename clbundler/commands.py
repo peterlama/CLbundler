@@ -17,7 +17,7 @@ def cmd_set(path):
     config.global_config().write()
 
 def cmd_new(path, toolchain, arch):
-    fpath = path.format(platform=config.os_name(), toolchain=toolchain, arch=arch)
+    fpath = path.format(p=config.os_name(), t=toolchain, a=arch)
     if fpath.split(os.sep)[0] == fpath:
         fpath = os.path.join(config.global_config().root_dir(), fpath)
 
