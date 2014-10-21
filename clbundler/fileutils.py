@@ -1,6 +1,7 @@
 import os
 import errno
 import shutil
+import time
 import fnmatch
 from glob import has_magic
 
@@ -17,10 +18,23 @@ def makedirs(path, mode=0o777, exist_ok=False):
             raise
 
 def rmtree_onerror(func, path, exc):
-    """Handle deleting read-only files on windows."""
+    """Handle deleting things on windows."""
     import stat
     excvalue = exc[1]
-    if func in (os.rmdir, os.remove):
+    if func in (os.rmdir, os.remove) and excvalue.errno == errno.ENOTEMPTY:
+        #Because windows sometimes keeps a directory alive for a little
+        #after it has been removed, wait and try again.
+        elapsed = 0
+        while elapsed < 0.1:
+            try:
+                func(path)
+            except WindowsError:
+                time.sleep(0.01)
+                elapsed += 0.01
+            else:
+                break
+    elif func in (os.rmdir, os.remove) and excvalue.errno == errno.EACCES:
+        #Read only directory
         os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO) # 0777
         func(path)
     else:
