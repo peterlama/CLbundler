@@ -27,6 +27,9 @@ class LibBundle:
         self._manifest_path = None
     
     def load(self, path):
+        if not path:
+            raise exceptions.BundleError("Empty bundle path")
+        
         self.path = path
         self._manifest_path = os.path.join(path, "MANIFEST.db")
         
