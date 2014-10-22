@@ -16,36 +16,40 @@ def global_config():
     return _config  
     
 class Config(SafeConfigParser):
-    _default_data_dir = os.path.join(os.path.expanduser('~'), "CLbundler")
-    _default_config_path = os.path.join(_default_data_dir, "CLbundler.cfg")
+    def load(self, path=None):
+        #default paths
+        self._default_data_dir = os.path.dirname(os.path.dirname(__file__))
+        self._default_config_path = os.path.join(self._default_data_dir, "CLbundler.cfg")
+        self._default_formula_dirs = os.path.join(self._default_data_dir, "formulas")
+        _default_workspace = os.path.join(self._default_data_dir, "workspace")
+        _default_src_cache = os.path.join(_default_workspace, "src_cache")
         
-    def load(self, path=_default_config_path):
+        if not path:
+            path = self._default_config_path
+        
         if os.path.isfile(path):
             with open(path, "r") as config_file:
                 self.readfp(config_file)
-        
-        #options that need to always be available    
-        self.defaults()["root"] = Config._default_data_dir
-        self.defaults()["workspace"] = "%(root)s" + os.path.sep + "workspace"
-        self.defaults()["src_cache"] = "%(root)s" + os.path.sep + "src_cache"
-        self.defaults()["formula_dirs"] = "%(root)s" + os.path.sep + "formulas"
         
         if not self.has_section("Paths"):
             self.add_section("Paths")
         if not self.has_section("Bundle"):
             self.add_section("Bundle")
-         
+        
+        if not self.has_option("Paths", "workspace"):
+            self.set("Paths", "workspace", _default_workspace)
+        if not self.has_option("Paths", "src_cache"):
+            self.set("Paths", "src_cache", _default_src_cache)
+            
         #create the directories
-        if not os.path.exists(self.get("Paths", "root")):
-            os.mkdir(self.get("Paths", "root"))
         if not os.path.exists(self.get("Paths", "workspace")):
             os.mkdir(self.get("Paths", "workspace"))
         if not os.path.exists(self.get("Paths", "src_cache")):
             os.mkdir(self.get("Paths", "src_cache"))
-            
-    def write(self, path=_default_config_path):
-        if not os.path.exists(os.path.dirname(path)):
-            os.mkdir(os.path.dirname(path))
+        
+    def write(self, path=None):
+        if not path:
+            path = self._default_config_path
         
         with open(path, "wb") as config_file:
             SafeConfigParser.write(self, config_file)
@@ -63,8 +67,9 @@ class Config(SafeConfigParser):
         return self.get("Paths", "build")
     
     def formula_dirs(self):
-        paths_str = self.get("DEFAULT", "formula_dirs") + os.pathsep
-        paths_str += self.get("Paths", "formula_dirs")
+        paths_str = self._default_formula_dirs
+        if self.has_option("Paths", "formula_dirs"):
+            paths_str += os.pathsep + self.get("Paths", "formula_dirs")
         paths = filter(bool, paths_str.split(os.pathsep))
         #add platform specific directories
         platform_paths = []
