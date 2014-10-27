@@ -115,7 +115,7 @@ class FormulaBuilder:
             if clean_src:
                 build_src_dir = os.path.join(self._context.build_dir, "{0}-{1}".format(formula.name, formula.version))
                 if os.path.exists(build_src_dir):
-                    shutil.rmtree(build_src_dir)
+                    fileutils.remove(build_src_dir)
             
             src_dir = sourcemanager.get_source(config.global_config().build_dir(), 
                                                formula.name, formula.version, formula.source)
