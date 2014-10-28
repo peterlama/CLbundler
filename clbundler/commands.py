@@ -93,7 +93,7 @@ def cmd_info():
     print("Toolchain: " + bundle.toolchain)
     print("Architecture: " + bundle.arch)
     print("\nInstalled:")
-    for info in bundle.list_installed():
+    for info in sorted(bundle.list_installed()):
         print("{0:<15}{1:<10}".format(info[0], info[1]))
 
 def cmd_list(package_name, category=None):
