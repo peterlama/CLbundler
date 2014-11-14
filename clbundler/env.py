@@ -46,16 +46,30 @@ def environ_from_bat(bat_file, args=""):
     
 def setup_env_vc(version, arch):
     """Set up Visual Studio build environment."""
+    import _winreg
+    
     global env
-    comntools = "VS{0}0COMNTOOLS".format(version)
+    
+    prefix = "SOFTWARE\\Microsoft\\"
+    flags = _winreg.KEY_READ | _winreg.KEY_WOW64_32KEY
     
     try:
-        comntools_path = env[comntools]
-    except KeyError:
-        raise exceptions.BuildConfigError("Could not find toolchain: vc" + version,
-                                          "No environment variable named '{0}'".format(comntools))
+        reg_path = prefix + "VisualStudio\\" + version + ".0"
+        with _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, reg_path, 0, flags) as key:
+            install_dir = _winreg.QueryValueEx(key, "InstallDir")[0]
+    except WindowsError:
+        try:
+            if int(version) > 9:
+                reg_path = prefix + "WDExpress\\" + version + ".0"
+            else:
+                reg_path = prefix + "VCExpress\\" + version + ".0"
+            
+            with _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, reg_path, 0, flags) as key:
+                install_dir = _winreg.QueryValueEx(key, "InstallDir")[0]
+        except WindowsError:
+            raise exceptions.BuildConfigError("Could not find InstallDir for vc" + version + " in registry")
         
-    vc_dir = os.path.normpath(comntools_path + "..\\..\\VC")
+    vc_dir = os.path.normpath(install_dir + "..\\..\\VC")
     env_bat = vc_dir + "\\vcvarsall.bat"
     env64_bat = None
     if os.path.exists(vc_dir + "\\bin\\vcvars64.bat"):
