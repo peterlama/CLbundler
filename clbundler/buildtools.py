@@ -15,7 +15,7 @@ def cmake_generator(toolchain, arch):
         if toolchain == "vc9":
             generator = "Visual Studio 9 2008"
         else:
-            generator = "Visual Studio " + vc_version(toolchain)
+            generator = "Visual Studio {0}".format(vc_version(toolchain))
         if arch == "x64":
             generator = generator + " Win64"
     else:
@@ -53,9 +53,9 @@ def cmake(context, options={}, build_dir=""):
     os.chdir("..")
 
 def vc_version(toolchain):
-    """Return the Visual C++ version from the toolchain string"""
+    """Return the Visual C++ version from the toolchain string as an int"""
     if toolchain.startswith("vc"):
-        return toolchain[2:]
+        return int(toolchain[2:])
         
 def vc_version_year(toolchain):
     """Return the Visual C++ version year from the toolchain string"""
@@ -70,9 +70,10 @@ def vc_version_year(toolchain):
     else:
         return ""
     
-def vcproj_ext(version):
+def vcproj_ext(toolchain):
     """Return file extension for Visual C++ projects"""
-    if int(version) > 9:
+    vc_ver = vc_version(toolchain)
+    if vc_ver > 9:
         return ".vcxproj"
     else:
         return ".vcproj"
