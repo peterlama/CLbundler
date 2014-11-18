@@ -63,14 +63,14 @@ def cmd_archive(path=None):
     
     if config.os_name() == "win":
         try:
-            system.run_cmd("7z", ["a", "-r", "-x!*.pyc", 
+            system.run_cmd("7z", ["a", "-r", 
                            archive_path + ".7z", 
                            config.global_config().current_bundle()])
         except exceptions.CalledProcessError as e:
             if e.returncode != 1:
                 raise
     else:
-        system.run_cmd("zip", ["-r", "-x", "*.pyc", 
+        system.run_cmd("zip", ["-r", 
                                archive_path + ".zip", 
                                config.global_config().current_bundle()])
 
