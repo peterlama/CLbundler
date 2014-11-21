@@ -121,7 +121,7 @@ def vcproj_upgrade(vcproj_file):
     
     return new_name
 
-def distutils(context):
+def distutils(context, debug=False):
     if context.os_name == "win":
         tmp_site_packages = context.install_dir + "\\Lib\site-packages"
         makedirs(tmp_site_packages, exist_ok=True)
@@ -129,4 +129,8 @@ def distutils(context):
         context.env["INCLUDE"] += context.bundle_path + "\\include\python2.7;"
         context.env["LIB"] += context.bundle_path + "\\lib;"
     
+    if debug:
+        system.run_cmd("python", ["setup.py", "build", "--debug"])
+    
+    system.run_cmd("python", ["setup.py", "build"])
     system.run_cmd("python", ["setup.py", "install", "--prefix=" + context.install_dir])
