@@ -58,9 +58,9 @@ class ArchiveSourceDownloader(AbstractSourceDownloader):
         sys.stdout.flush()
         
     def fetch(self):
-        self._check_archive_url(self.url)
-        
         if not os.path.exists(self.filepath):
+            self._check_archive_url(self.url)
+            
             logging.getLogger().info("Downloading {0}...".format(os.path.basename(self.filepath)))
             urllib.urlretrieve(self.url, self.filepath, self._download_progress)
         
